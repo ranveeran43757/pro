@@ -36,9 +36,9 @@ local selectedTool = nil
 local allItems = {}
 local autoStealEnabled = false
 
--- Scan all items function (Enhanced Version)
+-- Scan all items function (Debug Version)
 local function scanAllItems()
-    print("=== เริ่มสแกนไอเทมทั้งหมดในเซิร์ฟเวอร์ (Enhanced) ===")
+    print("=== เริ่มสแกนไอเทมทั้งหมดในเซิร์ฟเวอร์ ===")
     
     statusLabel.Text = "สถานะ: กำลังสแกนไอเทม..."
     statusLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
@@ -57,276 +57,111 @@ local function scanAllItems()
     local playersInServer = Players:GetPlayers()
     
     print("จำนวนผู้เล่นทั้งหมดในเซิร์ฟเวอร์:", #playersInServer)
-    print("ผู้เล่นของเรา:", player.Name)
     
     -- List all players first
     for i, p in ipairs(playersInServer) do
-        print("ผู้เล่นที่", i .. ":", p.Name, p == player and "(ตัวเอง - ข้าม)" or "(จะสแกน)")
+        print("ผู้เล่นที่", i .. ":", p.Name, p == player and "(ตัวเอง)" or "")
     end
     
-    -- Method 1: Search through Players service
-    print("=== วิธีที่ 1: ผ่าน Players Service ===")
+    -- Search through all players
     for _, otherPlayer in ipairs(playersInServer) do
         if otherPlayer ~= player then -- Don't include own items
             totalPlayers = totalPlayers + 1
             local foundItemsForThisPlayer = false
             local itemsFromThisPlayer = 0
             
-            print("กำลังสแกนผู้เล่น:", otherPlayer.Name, "| UserId:", otherPlayer.UserId)
+            print("กำลังสแกนผู้เล่น:", otherPlayer.Name)
             
-            -- Method 1a: Search in Backpack (with error protection)
-            local success1, backpackResult = pcall(function()
-                if otherPlayer.Backpack then
-                    local backpackTools = otherPlayer.Backpack:GetChildren()
-                    print("  กระเป๋า:", otherPlayer.Name, "มี", #backpackTools, "ไอเทม")
-                    
-                    for _, tool in ipairs(backpackTools) do
-                        if tool:IsA("Tool") or tool:IsA("LocalScript") or tool:IsA("ModuleScript") then
-                            local toolName = tool.Name:lower()
-                            print("    - พบ:", tool.ClassName, "-", tool.Name)
-                            
-                            if tool:IsA("Tool") and (searchTerm == "" or toolName:find(searchTerm)) then
-                                table.insert(allItems, {
-                                    tool = tool,
-                                    player = otherPlayer,
-                                    location = "💼 กระเป๋า",
-                                    playerName = otherPlayer.Name
-                                })
-                                foundItemsForThisPlayer = true
-                                itemsFromThisPlayer = itemsFromThisPlayer + 1
-                                print("      ✅ เพิ่มไอเทมในรายการ:", tool.Name)
-                            end
+            -- Search in Backpack
+            if otherPlayer.Backpack then
+                local backpackTools = otherPlayer.Backpack:GetChildren()
+                print("  กระเป๋า: มี", #backpackTools, "ไอเทม")
+                
+                for _, tool in ipairs(backpackTools) do
+                    if tool:IsA("Tool") then
+                        local toolName = tool.Name:lower()
+                        print("    - พบไอเทม:", tool.Name)
+                        
+                        if searchTerm == "" or toolName:find(searchTerm) then
+                            table.insert(allItems, {
+                                tool = tool,
+                                player = otherPlayer,
+                                location = "💼 กระเป๋า",
+                                playerName = otherPlayer.Name
+                            })
+                            foundItemsForThisPlayer = true
+                            itemsFromThisPlayer = itemsFromThisPlayer + 1
+                            print("      ✅ เพิ่มในรายการ")
+                        else
+                            print("      ❌ ไม่ตรงกับคำค้นหา")
                         end
                     end
-                    return true
-                else
-                    print("  กระเป๋า: ไม่พบ Backpack สำหรับ", otherPlayer.Name)
-                    return false
                 end
-            end)
-            
-            if not success1 then
-                print("  ❌ ไม่สามารถเข้าถึงกระเป๋าของ", otherPlayer.Name, "Error:", backpackResult)
+            else
+                print("  กระเป๋า: ไม่พบ")
             end
             
-            -- Method 1b: Search in Character (with error protection)
-            local success2, characterResult = pcall(function()
-                if otherPlayer.Character then
-                    local characterTools = otherPlayer.Character:GetChildren()
-                    local toolsInChar = 0
-                    
-                    for _, obj in ipairs(characterTools) do
-                        if obj:IsA("Tool") then
-                            toolsInChar = toolsInChar + 1
-                        end
+            -- Search in Hand/Character
+            if otherPlayer.Character then
+                local characterTools = otherPlayer.Character:GetChildren()
+                local toolsInHand = 0
+                
+                for _, tool in ipairs(characterTools) do
+                    if tool:IsA("Tool") then
+                        toolsInHand = toolsInHand + 1
                     end
-                    
-                    print("  Character:", otherPlayer.Name, "มี", toolsInChar, "ไอเทม")
-                    
-                    for _, tool in ipairs(characterTools) do
-                        if tool:IsA("Tool") then
-                            local toolName = tool.Name:lower()
-                            print("    - พบไอเทมในมือ:", tool.Name)
-                            
-                            if searchTerm == "" or toolName:find(searchTerm) then
-                                table.insert(allItems, {
-                                    tool = tool,
-                                    player = otherPlayer,
-                                    location = "✋ มือ",
-                                    playerName = otherPlayer.Name
-                                })
-                                foundItemsForThisPlayer = true 
-                                itemsFromThisPlayer = itemsFromThisPlayer + 1
-                                print("      ✅ เพิ่มไอเทมในรายการ:", tool.Name)
-                            end
-                        end
-                    end
-                    return true
-                else
-                    print("  Character: ไม่พบ Character สำหรับ", otherPlayer.Name)
-                    return false
                 end
-            end)
-            
-            if not success2 then
-                print("  ❌ ไม่สามารถเข้าถึง Character ของ", otherPlayer.Name, "Error:", characterResult)
+                
+                print("  มือ/Character: มี", toolsInHand, "ไอเทม")
+                
+                for _, tool in ipairs(characterTools) do
+                    if tool:IsA("Tool") then
+                        local toolName = tool.Name:lower()
+                        print("    - พบไอเทม:", tool.Name)
+                        
+                        if searchTerm == "" or toolName:find(searchTerm) then
+                            table.insert(allItems, {
+                                tool = tool,
+                                player = otherPlayer,
+                                location = "✋ มือ",
+                                playerName = otherPlayer.Name
+                            })
+                            foundItemsForThisPlayer = true 
+                            itemsFromThisPlayer = itemsFromThisPlayer + 1
+                            print("      ✅ เพิ่มในรายการ")
+                        else
+                            print("      ❌ ไม่ตรงกับคำค้นหา")
+                        end
+                    end
+                end
+            else
+                print("  Character: ไม่พบ")
             end
             
             if foundItemsForThisPlayer then
                 playersWithItems = playersWithItems + 1
-                print("  ✅ สรุป:", otherPlayer.Name, "มี", itemsFromThisPlayer, "ไอเทมที่ตรงกับเงื่อนไข")
+                print("  สรุป:", otherPlayer.Name, "มี", itemsFromThisPlayer, "ไอเทมที่ตรงกับเงื่อนไข")
             else
-                print("  ❌ สรุป:", otherPlayer.Name, "ไม่มีไอเทม หรือไม่สามารถเข้าถึงได้")
+                print("  สรุป:", otherPlayer.Name, "ไม่มีไอเทมที่ตรงกับเงื่อนไข")
             end
         end
     end
     
-    -- Method 2: Alternative search through workspace
-    print("=== วิธีที่ 2: ค้นหาผ่าน Workspace ===")
-    local workspaceItems = 0
-    pcall(function()
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("Tool") and obj.Parent and obj.Parent.Parent then
-                local parentName = obj.Parent.Name
-                local grandParentName = obj.Parent.Parent.Name
-                
-                -- Check if it belongs to another player
-                for _, otherPlayer in ipairs(Players:GetPlayers()) do
-                    if otherPlayer ~= player and 
-                       (parentName == otherPlayer.Name or grandParentName == otherPlayer.Name or
-                        (obj.Parent == otherPlayer.Backpack) or 
-                        (obj.Parent == otherPlayer.Character)) then
-                        
-                        local toolName = obj.Name:lower()
-                        if searchTerm == "" or toolName:find(searchTerm) then
-                            -- Check if not already added
-                            local alreadyExists = false
-                            for _, existingItem in ipairs(allItems) do
-                                if existingItem.tool == obj then
-                                    alreadyExists = true
-                                    break
-                                end
-                            end
-                            
-                            if not alreadyExists then
-                                table.insert(allItems, {
-                                    tool = obj,
-                                    player = otherPlayer,
-                                    location = "🌍 Workspace",
-                                    playerName = otherPlayer.Name
-                                })
-                                workspaceItems = workspaceItems + 1
-                                print("  ✅ พบไอเทมใน Workspace:", obj.Name, "ของ", otherPlayer.Name)
-                            end
-                        end
-                        break
-                    end
-                end
-            end
-        end
-    end)
-    print("พบไอเทมเพิ่มเติมใน Workspace:", workspaceItems, "ชิ้น")
-    
-    -- Method 3: Global search for all Tool instances
-    print("=== วิธีที่ 3: ค้นหา Tool ทั้งหมดในเกม ===")
-    local globalItems = 0
-    pcall(function()
-        for _, obj in ipairs(game:GetDescendants()) do
-            if obj:IsA("Tool") then
-                -- Try to determine owner
-                local owner = nil
-                local location = "❓ ไม่ทราบ"
-                
-                -- Check if in someone's backpack
-                local parent = obj.Parent
-                if parent and parent.Name == "Backpack" and parent.Parent and parent.Parent:IsA("Player") then
-                    owner = parent.Parent
-                    location = "💼 กระเป๋า"
-                -- Check if in someone's character
-                elseif parent and parent:FindFirstChild("Humanoid") then
-                    for _, p in ipairs(Players:GetPlayers()) do
-                        if p.Character == parent then
-                            owner = p
-                            location = "✋ มือ"
-                            break
-                        end
-                    end
-                end
-                
-                -- Only add if owner is not us and we found an owner
-                if owner and owner ~= player then
-                    local toolName = obj.Name:lower()
-                    if searchTerm == "" or toolName:find(searchTerm) then
-                        -- Check if not already added
-                        local alreadyExists = false
-                        for _, existingItem in ipairs(allItems) do
-                            if existingItem.tool == obj then
-                                alreadyExists = true
-                                break
-                            end
-                        end
-                        
-                        if not alreadyExists then
-                            table.insert(allItems, {
-                                tool = obj,
-                                player = owner,
-                                location = location,
-                                playerName = owner.Name
-                            })
-                            globalItems = globalItems + 1
-                            print("  ✅ พบไอเทมแบบ Global:", obj.Name, "ของ", owner.Name, "ใน", location)
-                        end
-                    end
-                end
-            end
-        end
-    end)
-    print("พบไอเทมเพิ่มเติมแบบ Global:", globalItems, "ชิ้น")
-    
-    print("=== ผลการสแกนรวม ===")
+    print("=== ผลการสแกน ===")
     print("- ผู้เล่นทั้งหมด:", totalPlayers, "คน")
     print("- ผู้เล่นที่มีไอเทม:", playersWithItems, "คน")
-    print("- ไอเทมที่พบทั้งหมด:", #allItems, "ชิ้น")
-    print("- คำค้นหา:", searchTerm == "" and "(ไม่มี - แสดงทั้งหมด)" or "'" .. searchTerm .. "'")
-    
-    -- Force add some test items if none found (for debugging)
-    if #allItems == 0 then
-        print("=== ไม่พบไอเทม - กำลังทดสอบการสร้างไอเทมจำลอง ===")
-        
-        -- Try to find ANY objects that might be tools
-        for _, otherPlayer in ipairs(playersInServer) do
-            if otherPlayer ~= player then
-                pcall(function()
-                    -- Check all descendants of the player
-                    for _, obj in ipairs(otherPlayer:GetDescendants()) do
-                        if obj:IsA("Tool") or obj.Name:lower():find("tool") or obj.Name:lower():find("sword") or 
-                           obj.Name:lower():find("gun") or obj.Name:lower():find("wand") then
-                            
-                            table.insert(allItems, {
-                                tool = obj,
-                                player = otherPlayer,
-                                location = "🔍 ตรวจพบ",
-                                playerName = otherPlayer.Name
-                            })
-                            print("  🔍 พบวัตถุที่เป็นไปได้:", obj.Name, "ใน", obj.Parent and obj.Parent.Name or "Unknown")
-                        end
-                    end
-                end)
-            end
-        end
-        
-        -- If still no items, create fake entries to show the system works
-        if #allItems == 0 then
-            print("  📝 สร้างรายการทดสอบ...")
-            for _, otherPlayer in ipairs(playersInServer) do
-                if otherPlayer ~= player then
-                    -- Create fake tool entry for testing
-                    table.insert(allItems, {
-                        tool = {Name = "[ทดสอบ] Tool ของ " .. otherPlayer.Name, Parent = otherPlayer},
-                        player = otherPlayer,
-                        location = "🧪 ทดสอบ",
-                        playerName = otherPlayer.Name
-                    })
-                    print("  🧪 สร้างรายการทดสอบสำหรับ:", otherPlayer.Name)
-                end
-            end
-        end
-    end
+    print("- ไอเทมที่พบ:", #allItems, "ชิ้น")
+    print("- คำค้นหา:", searchTerm == "" and "(ไม่มี)" or "'" .. searchTerm .. "'")
     
     if #allItems == 0 then
-        if totalPlayers == 0 then
-            feedback.Text = "ไม่มีผู้เล่นคนอื่นในเซิร์ฟเวอร์ (มีแค่เราคนเดียว)"
-            statusLabel.Text = "สถานะ: ไม่มีผู้เล่นอื่น"
-            print("❌ ไม่มีผู้เล่นคนอื่นในเซิร์ฟเวอร์")
-        else if searchTerm ~= "" then
-            feedback.Text = "ไม่พบไอเทมที่ตรงกับ '" .. searchBox.Text .. "' จาก " .. totalPlayers .. " คน"
+        if searchTerm ~= "" then
+            feedback.Text = "ไม่พบไอเทมที่ตรงกับ '" .. searchBox.Text .. "' ในเซิร์ฟเวอร์"
             statusLabel.Text = "สถานะ: ไม่พบไอเทมที่ค้นหา"
-            print("❌ ไม่พบไอเทมที่ตรงกับคำค้นหา จาก", totalPlayers, "คน")
+            print("❌ ไม่พบไอเทมที่ตรงกับคำค้นหา")
         else
-            feedback.Text = "ไม่พบไอเทมใดในเซิร์ฟเวอร์ (สแกนแล้ว " .. totalPlayers .. " คน) - อาจเป็นเกมที่ไม่มีไอเทม"
+            feedback.Text = "ไม่พบไอเทมใดในเซิร์ฟเวอร์ (สแกนแล้ว " .. totalPlayers .. " คน)"
             statusLabel.Text = "สถานะ: ไม่พบไอเทมในเซิร์ฟเวอร์"
-            print("❌ ไม่พบไอเทมใดเลยในเซิร์ฟเวอร์ จาก", totalPlayers, "คน")
-        end
+            print("❌ ไม่พบไอเทมใดเลยในเซิร์ฟเวอร์")
         end
         statusLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
         return
@@ -401,7 +236,7 @@ local function scanAllItems()
     end
     statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
     
-    print("=== สแกนเสร็จสิ้น - พบไอเทมทั้งหมด", #allItems, "ชิ้น ===")
+    print("=== สแกนเสร็จสิ้น ===")
 end
 
 -- Create ScreenGui
@@ -412,18 +247,19 @@ screenGui.IgnoreGuiInset = true
 screenGui.Parent = playerGui
 
 -- Toggle Button (Always visible)
-local toggleBtn = Instance.new("TextButton")
+local toggleBtn = Instance.new("ImageButton")
 toggleBtn.Name = "ToggleButton"
 toggleBtn.Size = UDim2.new(0, 60, 0, 60)
 toggleBtn.Position = UDim2.new(0, 20, 0, 20)
 toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 toggleBtn.BackgroundTransparency = 0.3
-toggleBtn.Text = "⚡"
-toggleBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
-toggleBtn.TextScaled = true
-toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.Image = "rbxassetid://135287785267863"
+toggleBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.ImageTransparency = 0
 toggleBtn.BorderSizePixel = 0
 toggleBtn.ZIndex = 1000
+toggleBtn.Active = true
+toggleBtn.Draggable = true
 toggleBtn.Parent = screenGui
 
 local toggleCorner = Instance.new("UICorner")
@@ -441,6 +277,19 @@ toggleGlow.ImageColor3 = Color3.fromRGB(0, 255, 255)
 toggleGlow.ImageTransparency = 0.7
 toggleGlow.ZIndex = 999
 toggleGlow.Parent = toggleBtn
+
+-- เพิ่ม Text Label บนปุ่ม Toggle สำหรับสถานะ
+local toggleText = Instance.new("TextLabel")
+toggleText.Name = "StatusText"
+toggleText.Size = UDim2.new(1, 0, 0, 15)
+toggleText.Position = UDim2.new(0, 0, 1, 2)
+toggleText.BackgroundTransparency = 1
+toggleText.Text = "OFFLINE"
+toggleText.TextColor3 = Color3.fromRGB(255, 100, 100)
+toggleText.TextScaled = true
+toggleText.Font = Enum.Font.GothamBold
+toggleText.ZIndex = 1001
+toggleText.Parent = toggleBtn
 
 -- Main Frame
 local mainFrame = Instance.new("Frame")
@@ -588,13 +437,37 @@ local isUIVisible = false
 toggleBtn.MouseButton1Click:Connect(function()
     isUIVisible = not isUIVisible
     
+    -- Update toggle button status text
+    local toggleText = toggleBtn:FindFirstChild("StatusText")
+    if toggleText then
+        toggleText.Text = isUIVisible and "ONLINE" or "OFFLINE"
+        toggleText.TextColor3 = isUIVisible and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
+    end
+    
     -- Animation effect for toggle button
-    local targetColor = isUIVisible and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(255, 100, 0)
+    local targetColor = isUIVisible and Color3.fromRGB(0, 100, 0) or Color3.fromRGB(100, 0, 0)
+    local targetImageColor = isUIVisible and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
+    
     local toggleTween = TweenService:Create(toggleBtn, 
         TweenInfo.new(0.3, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out),
-        {BackgroundColor3 = targetColor}
+        {
+            BackgroundColor3 = targetColor,
+            ImageColor3 = targetImageColor
+        }
     )
     toggleTween:Play()
+    
+    -- Rotation animation for the logo
+    local rotateTween = TweenService:Create(toggleBtn,
+        TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+        {Rotation = isUIVisible and 360 or 0}
+    )
+    rotateTween:Play()
+    
+    -- Reset rotation after animation
+    rotateTween.Completed:Connect(function()
+        toggleBtn.Rotation = 0
+    end)
     
     -- Main frame animation
     if isUIVisible then
@@ -1120,42 +993,6 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             statusLabel.Text = "สถานะ: ไม่พบตัวละคร"
             statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
         end
-    elseif not gameProcessed and input.KeyCode == Enum.KeyCode.F then
-        -- Force scan with detailed debug info (F key)
-        print("=== บังคับสแกนด้วย F key ===")
-        
-        -- Show detailed player info
-        for _, p in ipairs(Players:GetPlayers()) do
-            print("ผู้เล่น:", p.Name)
-            print("  - UserId:", p.UserId)
-            print("  - Character:", p.Character and p.Character.Name or "ไม่มี")
-            print("  - Backpack:", p.Backpack and "มี" or "ไม่มี")
-            
-            if p.Backpack then
-                local items = p.Backpack:GetChildren()
-                print("  - รายการในกระเป๋า:", #items, "ชิ้น")
-                for i, item in ipairs(items) do
-                    print("    " .. i .. ":", item.Name, "(" .. item.ClassName .. ")")
-                end
-            end
-            
-            if p.Character then
-                local charItems = {}
-                for _, obj in ipairs(p.Character:GetChildren()) do
-                    if obj:IsA("Tool") then
-                        table.insert(charItems, obj)
-                    end
-                end
-                print("  - รายการในมือ:", #charItems, "ชิ้น")
-                for i, item in ipairs(charItems) do
-                    print("    " .. i .. ":", item.Name, "(" .. item.ClassName .. ")")
-                end
-            end
-            print("  ---")
-        end
-        
-        -- Force rescan
-        scanAllItems()
     end
 end)
 
@@ -1194,7 +1031,7 @@ spawn(function()
     end
 end)
 
-print("ระบบขโมยไอเทม Universal พร้อมใช้งาน! (เวอร์ชันปรับปรุง)")
+print("ระบบขโมยไอเทม Universal พร้อมใช้งาน!")
 print("คำเตือน: ใช้เฉพาะในเซิร์ฟเวอร์ทดสอบเท่านั้น")
 print("=== วิธีใช้งานใหม่ ===")
 print("1. คลิก 'แสกนไอเทมทั้งหมด' เพื่อดูไอเทมทุกชิ้นในเซิร์ฟเวอร์")
@@ -1203,20 +1040,11 @@ print("3. คลิกเลือกไอเทมที่ต้องกา�
 print("4. หรือคลิก 'ขโมยทุกไอเทมจากทุกคน' เพื่อขโมยทั้งหมด")
 print("5. เปิด 'ขโมยอัตโนมัติ' เพื่อขโมยไอเทมใหม่ที่ปรากฏโดยอัตโนมัติ")
 print("6. กด R เพื่อรีเฟรชข้อมูลตัวละครและรายการไอเทม")
-print("7. กด F เพื่อแสดงข้อมูลโดยละเอียดของทุกคนในเซิร์ฟเวอร์")
 print("=== คุณสมบัติใหม่ ===")
 print("✅ ไม่ต้องกังวลเรื่องระยะทาง - เห็นไอเทมทั้งเซิร์ฟเวอร์")
 print("✅ ไม่ต้องเลือกผู้เล่นทีละคน - เห็นไอเทมทั้งหมดในที่เดียว")
 print("✅ ระบบขโมยอัตโนมัติ - ขโมยไอเทมใหม่ทันทีที่ปรากฏ")
 print("✅ UI ทันสมัย พื้นหลังโปร่งใส พร้อมเอฟเฟคสวยงาม")
-print("✅ ระบบสแกนหลายวิธี - พบไอเทมได้แม้ในเกมที่มีการป้องกัน")
-print("✅ Debug mode - กด F เพื่อดูข้อมูลโดยละเอียด")
-print("=== หมายเหตุ ===")
-print("🔍 หากไม่พบไอเทม อาจเป็นเพราะ:")
-print("   - เกมไม่ใช้ระบบ Tool ปกติ")
-print("   - ผู้เล่นคนอื่นไม่มีไอเทม")
-print("   - เซิร์ฟเวอร์มีการป้องกันการเข้าถึงข้อมูล")
-print("🎮 ลองกด F เพื่อดูข้อมูลโดยละเอียดก่อนใช้งาน")
 
 -- Auto scan items when GUI opens
 task.wait(1)
