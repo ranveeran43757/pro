@@ -11,16 +11,22 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local backpack = player:WaitForChild("Backpack")
-local char = player.Character or player.CharacterAdded:Wait()
-local humanoid = char:WaitForChild("Humanoid")
+
+-- Wait for character properly
+local function waitForCharacter()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local humanoid = char:WaitForChild("Humanoid")
+    return char, humanoid
+end
+
+local char, humanoid = waitForCharacter()
 
 -- Update character when respawned
 player.CharacterAdded:Connect(function(newChar)
     char = newChar
     humanoid = newChar:WaitForChild("Humanoid")
-    backpack = player:WaitForChild("Backpack") -- Update backpack reference too
-    print("Character updated:", player.Name)
-    print("Humanoid updated successfully")
+    backpack = player:WaitForChild("Backpack")
+    print("อัปเดตตัวละคร:", player.Name)
 end)
 
 print("ผู้เล่น:", player.Name)
@@ -36,99 +42,98 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "UniversalItemStealer"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
--- Toggle Button (Always visible)
-local toggleBtn = Instance.new("ImageButton")
+-- Toggle Button (Always visible) - Mobile friendly
+local toggleBtn = Instance.new("TextButton")
 toggleBtn.Name = "ToggleButton"
-toggleBtn.Size = UDim2.new(0, 60, 0, 60)
-toggleBtn.Position = UDim2.new(0, 20, 0.5, -30)
+toggleBtn.Size = UDim2.new(0, 70, 0, 70)
+toggleBtn.Position = UDim2.new(0, 15, 0, 100)
 toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-toggleBtn.BackgroundTransparency = 0.3
+toggleBtn.BackgroundTransparency = 0.2
 toggleBtn.BorderSizePixel = 0
-toggleBtn.Image = "rbxassetid://135287785267863" -- Your logo
-toggleBtn.ScaleType = Enum.ScaleType.Fit
+toggleBtn.Text = "🔥"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.TextSize = 30
+toggleBtn.Font = Enum.Font.GothamBold
 toggleBtn.Active = true
+toggleBtn.ZIndex = 10
 toggleBtn.Parent = screenGui
 
 -- Toggle button styling
 local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(0, 30)
+toggleCorner.CornerRadius = UDim.new(0, 35)
 toggleCorner.Parent = toggleBtn
 
 local toggleStroke = Instance.new("UIStroke")
-toggleStroke.Color = Color3.fromRGB(0, 150, 255)
-toggleStroke.Thickness = 2
-toggleStroke.Transparency = 0.5
+toggleStroke.Color = Color3.fromRGB(255, 100, 50)
+toggleStroke.Thickness = 3
+toggleStroke.Transparency = 0.3
 toggleStroke.Parent = toggleBtn
 
--- Toggle button glow effect
-local toggleGlow = Instance.new("ImageLabel")
-toggleGlow.Size = UDim2.new(1.2, 0, 1.2, 0)
-toggleGlow.Position = UDim2.new(-0.1, 0, -0.1, 0)
-toggleGlow.BackgroundTransparency = 1
-toggleGlow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-toggleGlow.ImageColor3 = Color3.fromRGB(0, 150, 255)
-toggleGlow.ImageTransparency = 0.8
-toggleGlow.ZIndex = -1
-toggleGlow.Parent = toggleBtn
+-- Glow effect for toggle button
+local toggleGradient = Instance.new("UIGradient")
+toggleGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 30, 30))
+}
+toggleGradient.Rotation = 45
+toggleGradient.Parent = toggleBtn
 
--- Main Frame (Initially hidden)
+-- Main Frame (Initially hidden) - Mobile optimized
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 420, 0, 750)
-mainFrame.Position = UDim2.new(0.5, -210, 0.5, -375)
+mainFrame.Size = UDim2.new(0.9, 0, 0.85, 0)
+mainFrame.Position = UDim2.new(0.05, 0, 0.075, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-mainFrame.BackgroundTransparency = 0.2
+mainFrame.BackgroundTransparency = 0.1
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Visible = false
+mainFrame.ZIndex = 1
 mainFrame.Parent = screenGui
 
 -- Modern corner and styling
 local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 15)
+corner.CornerRadius = UDim.new(0, 20)
 corner.Parent = mainFrame
 
 -- Modern stroke
 local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(0, 150, 255)
-stroke.Thickness = 1
-stroke.Transparency = 0.7
+stroke.Color = Color3.fromRGB(255, 100, 50)
+stroke.Thickness = 2
+stroke.Transparency = 0.5
 stroke.Parent = mainFrame
-
--- Glass effect background
-local glassEffect = Instance.new("Frame")
-glassEffect.Size = UDim2.new(1, 0, 1, 0)
-glassEffect.Position = UDim2.new(0, 0, 0, 0)
-glassEffect.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-glassEffect.BackgroundTransparency = 0.95
-glassEffect.BorderSizePixel = 0
-glassEffect.ZIndex = -1
-glassEffect.Parent = mainFrame
-
-local glassCorner = Instance.new("UICorner")
-glassCorner.CornerRadius = UDim.new(0, 15)
-glassCorner.Parent = glassEffect
 
 -- Modern gradient
 local gradient = Instance.new("UIGradient")
 gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 25)),
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 30)),
     ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 0, 0)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 20))
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
 }
 gradient.Rotation = 135
 gradient.Transparency = NumberSequence.new{
     NumberSequenceKeypoint.new(0, 0.1),
-    NumberSequenceKeypoint.new(0.5, 0.3),
+    NumberSequenceKeypoint.new(0.5, 0.2),
     NumberSequenceKeypoint.new(1, 0.1)
 }
 gradient.Parent = mainFrame
 
--- Enable Dragging
+-- Enable Mobile-friendly Dragging
 local dragging = false
-local dragStart, startPos, dragInput
+local dragStart, startPos
+
+local function updateInput(input)
+    if dragging then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end
 
 mainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or
@@ -136,6 +141,7 @@ mainFrame.InputBegan:Connect(function(input)
         dragging = true
         dragStart = input.Position
         startPos = mainFrame.Position
+        
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
@@ -144,82 +150,78 @@ mainFrame.InputBegan:Connect(function(input)
     end
 end)
 
-mainFrame.InputChanged:Connect(function(input)
+UserInputService.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or
        input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
+        updateInput(input)
     end
 end)
 
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
-        local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(
-            startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
--- Title Bar
+-- Title Bar - Mobile optimized
 local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 50)
+titleBar.Size = UDim2.new(1, 0, 0, 60)
 titleBar.Position = UDim2.new(0, 0, 0, 0)
 titleBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-titleBar.BackgroundTransparency = 0.1
+titleBar.BackgroundTransparency = 0.05
 titleBar.BorderSizePixel = 0
+titleBar.ZIndex = 2
 titleBar.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 15)
+titleCorner.CornerRadius = UDim.new(0, 20)
 titleCorner.Parent = titleBar
 
 local titleGradient = Instance.new("UIGradient")
 titleGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 200)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 50, 150))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 50)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 50, 30))
 }
 titleGradient.Rotation = 90
 titleGradient.Parent = titleBar
 
--- Logo in title
-local titleLogo = Instance.new("ImageLabel")
-titleLogo.Size = UDim2.new(0, 35, 0, 35)
-titleLogo.Position = UDim2.new(0, 10, 0, 7.5)
-titleLogo.BackgroundTransparency = 1
-titleLogo.Image = "rbxassetid://135287785267863"
-titleLogo.ScaleType = Enum.ScaleType.Fit
-titleLogo.Parent = titleBar
-
--- Title Text
+-- Title Text - Mobile friendly size
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -90, 1, 0)
-title.Position = UDim2.new(0, 50, 0, 0)
+title.Size = UDim2.new(1, -120, 1, 0)
+title.Position = UDim2.new(0, 15, 0, 0)
 title.BackgroundTransparency = 1
 title.Text = "🔥 ระบบขโมยไอเทม 🔥"
 title.TextColor3 = Color3.new(1, 1, 1)
-title.TextScaled = true
+title.TextSize = 18
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
+title.ZIndex = 3
 title.Parent = titleBar
 
--- Close Button
+-- Close Button - Mobile friendly
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 35, 0, 35)
-closeBtn.Position = UDim2.new(1, -42.5, 0, 7.5)
+closeBtn.Size = UDim2.new(0, 50, 0, 50)
+closeBtn.Position = UDim2.new(1, -55, 0, 5)
 closeBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 closeBtn.Text = "✕"
 closeBtn.TextColor3 = Color3.new(1, 1, 1)
-closeBtn.TextScaled = true
+closeBtn.TextSize = 20
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.BorderSizePixel = 0
+closeBtn.ZIndex = 3
 closeBtn.Parent = titleBar
 
 local closeBtnCorner = Instance.new("UICorner")
-closeBtnCorner.CornerRadius = UDim.new(0, 17.5)
+closeBtnCorner.CornerRadius = UDim.new(0, 25)
 closeBtnCorner.Parent = closeBtn
 
--- Toggle functionality
+-- Content Frame for scrolling
+local contentFrame = Instance.new("ScrollingFrame")
+contentFrame.Size = UDim2.new(1, 0, 1, -70)
+contentFrame.Position = UDim2.new(0, 0, 0, 70)
+contentFrame.BackgroundTransparency = 1
+contentFrame.BorderSizePixel = 0
+contentFrame.ScrollBarThickness = 8
+contentFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 100, 50)
+contentFrame.CanvasSize = UDim2.new(0, 0, 0, 1200)
+contentFrame.ZIndex = 2
+contentFrame.Parent = mainFrame
+
+-- Toggle functionality with better mobile support
 local isUIVisible = false
 
 local function toggleUI()
@@ -227,287 +229,253 @@ local function toggleUI()
     
     if isUIVisible then
         mainFrame.Visible = true
-        -- Smooth fade in animation
+        mainFrame.Size = UDim2.new(0, 50, 0, 50)
+        mainFrame.BackgroundTransparency = 1
+        
+        -- Smooth open animation
         local tween = TweenService:Create(
             mainFrame,
-            TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-            {Size = UDim2.new(0, 420, 0, 750), BackgroundTransparency = 0.2}
+            TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {
+                Size = UDim2.new(0.9, 0, 0.85, 0),
+                BackgroundTransparency = 0.1
+            }
         )
         tween:Play()
+        
+        -- Change toggle button
+        toggleBtn.Text = "❌"
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
     else
-        -- Smooth fade out animation
+        -- Smooth close animation
         local tween = TweenService:Create(
             mainFrame,
-            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-            {Size = UDim2.new(0, 420, 0, 0), BackgroundTransparency = 1}
+            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            {
+                Size = UDim2.new(0, 50, 0, 50),
+                BackgroundTransparency = 1
+            }
         )
         tween:Play()
+        
         tween.Completed:Connect(function()
             mainFrame.Visible = false
         end)
+        
+        -- Change toggle button
+        toggleBtn.Text = "🔥"
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     end
 end
 
+-- Connect toggle events
 toggleBtn.MouseButton1Click:Connect(toggleUI)
-closeBtn.MouseButton1Click:Connect(function()
-    toggleUI()
-end)
+closeBtn.MouseButton1Click:Connect(toggleUI)
 
--- Scan Range Slider
+-- Mobile touch support
+toggleBtn.TouchTap:Connect(toggleUI)
+closeBtn.TouchTap:Connect(toggleUI)
+
+-- Scan Range Section
 local rangeLabel = Instance.new("TextLabel")
-rangeLabel.Size = UDim2.new(1, -20, 0, 30)
-rangeLabel.Position = UDim2.new(0, 10, 0, 60)
+rangeLabel.Size = UDim2.new(1, -20, 0, 40)
+rangeLabel.Position = UDim2.new(0, 10, 0, 10)
 rangeLabel.BackgroundTransparency = 1
 rangeLabel.Text = "🎯 ระยะสแกน: 50 หน่วย"
 rangeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-rangeLabel.TextScaled = true
+rangeLabel.TextSize = 16
 rangeLabel.Font = Enum.Font.GothamSemibold
 rangeLabel.TextXAlignment = Enum.TextXAlignment.Left
-rangeLabel.Parent = mainFrame
+rangeLabel.ZIndex = 3
+rangeLabel.Parent = contentFrame
 
 local rangeSlider = Instance.new("TextBox")
-rangeSlider.Size = UDim2.new(1, -20, 0, 35)
-rangeSlider.Position = UDim2.new(0, 10, 0, 90)
-rangeSlider.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-rangeSlider.BackgroundTransparency = 0.3
+rangeSlider.Size = UDim2.new(1, -20, 0, 45)
+rangeSlider.Position = UDim2.new(0, 10, 0, 55)
+rangeSlider.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+rangeSlider.BackgroundTransparency = 0.2
 rangeSlider.BorderSizePixel = 0
 rangeSlider.PlaceholderText = "ระยะสแกน (10-200)"
 rangeSlider.Text = "50"
 rangeSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
-rangeSlider.TextScaled = true
+rangeSlider.TextSize = 16
 rangeSlider.Font = Enum.Font.Gotham
-rangeSlider.Parent = mainFrame
+rangeSlider.ZIndex = 3
+rangeSlider.Parent = contentFrame
 
 local rangeCorner = Instance.new("UICorner")
-rangeCorner.CornerRadius = UDim.new(0, 8)
+rangeCorner.CornerRadius = UDim.new(0, 10)
 rangeCorner.Parent = rangeSlider
 
 local rangeStroke = Instance.new("UIStroke")
-rangeStroke.Color = Color3.fromRGB(0, 150, 255)
+rangeStroke.Color = Color3.fromRGB(255, 100, 50)
 rangeStroke.Thickness = 1
-rangeStroke.Transparency = 0.7
+rangeStroke.Transparency = 0.5
 rangeStroke.Parent = rangeSlider
 
--- Item Search Box
+-- Search Section
 local searchLabel = Instance.new("TextLabel")
-searchLabel.Size = UDim2.new(1, -20, 0, 30)
-searchLabel.Position = UDim2.new(0, 10, 0, 135)
+searchLabel.Size = UDim2.new(1, -20, 0, 40)
+searchLabel.Position = UDim2.new(0, 10, 0, 110)
 searchLabel.BackgroundTransparency = 1
 searchLabel.Text = "🔍 ค้นหาไอเทม:"
 searchLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-searchLabel.TextScaled = true
+searchLabel.TextSize = 16
 searchLabel.Font = Enum.Font.GothamSemibold
 searchLabel.TextXAlignment = Enum.TextXAlignment.Left
-searchLabel.Parent = mainFrame
+searchLabel.ZIndex = 3
+searchLabel.Parent = contentFrame
 
 local searchBox = Instance.new("TextBox")
-searchBox.Size = UDim2.new(1, -20, 0, 35)
-searchBox.Position = UDim2.new(0, 10, 0, 165)
-searchBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-searchBox.BackgroundTransparency = 0.3
+searchBox.Size = UDim2.new(1, -20, 0, 45)
+searchBox.Position = UDim2.new(0, 10, 0, 155)
+searchBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+searchBox.BackgroundTransparency = 0.2
 searchBox.BorderSizePixel = 0
 searchBox.PlaceholderText = "พิมพ์ชื่อไอเทมที่ต้องการค้นหา..."
 searchBox.Text = ""
 searchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-searchBox.TextScaled = true
+searchBox.TextSize = 16
 searchBox.Font = Enum.Font.Gotham
-searchBox.Parent = mainFrame
+searchBox.ZIndex = 3
+searchBox.Parent = contentFrame
 
 local searchCorner = Instance.new("UICorner")
-searchCorner.CornerRadius = UDim.new(0, 8)
+searchCorner.CornerRadius = UDim.new(0, 10)
 searchCorner.Parent = searchBox
 
 local searchStroke = Instance.new("UIStroke")
-searchStroke.Color = Color3.fromRGB(0, 150, 255)
+searchStroke.Color = Color3.fromRGB(255, 100, 50)
 searchStroke.Thickness = 1
-searchStroke.Transparency = 0.7
+searchStroke.Transparency = 0.5
 searchStroke.Parent = searchBox
 
 -- Scan Button
 local scanBtn = Instance.new("TextButton")
-scanBtn.Size = UDim2.new(1, -20, 0, 40)
+scanBtn.Size = UDim2.new(1, -20, 0, 50)
 scanBtn.Position = UDim2.new(0, 10, 0, 210)
-scanBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-scanBtn.BackgroundTransparency = 0.3
+scanBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+scanBtn.BackgroundTransparency = 0.2
 scanBtn.Text = "🌐 สแกนหาผู้เล่น"
 scanBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-scanBtn.TextScaled = true
+scanBtn.TextSize = 18
 scanBtn.Font = Enum.Font.GothamBold
 scanBtn.BorderSizePixel = 0
-scanBtn.Parent = mainFrame
+scanBtn.ZIndex = 3
+scanBtn.Parent = contentFrame
 
 local scanCorner = Instance.new("UICorner")
-scanCorner.CornerRadius = UDim.new(0, 10)
+scanCorner.CornerRadius = UDim.new(0, 12)
 scanCorner.Parent = scanBtn
-
-local scanStroke = Instance.new("UIStroke")
-scanStroke.Color = Color3.fromRGB(0, 200, 100)
-scanStroke.Thickness = 2
-scanStroke.Parent = scanBtn
-
-local scanGradient = Instance.new("UIGradient")
-scanGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 150, 75)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 50))
-}
-scanGradient.Rotation = 90
-scanGradient.Parent = scanBtn
 
 -- Players List Frame
 local playersFrame = Instance.new("ScrollingFrame")
-playersFrame.Size = UDim2.new(1, -20, 0, 130)
-playersFrame.Position = UDim2.new(0, 10, 0, 260)
-playersFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-playersFrame.BackgroundTransparency = 0.4
+playersFrame.Size = UDim2.new(1, -20, 0, 150)
+playersFrame.Position = UDim2.new(0, 10, 0, 270)
+playersFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+playersFrame.BackgroundTransparency = 0.3
 playersFrame.BorderSizePixel = 0
 playersFrame.ScrollBarThickness = 6
-playersFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 150, 255)
+playersFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 100, 50)
 playersFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-playersFrame.Parent = mainFrame
+playersFrame.ZIndex = 3
+playersFrame.Parent = contentFrame
 
 local playersCorner = Instance.new("UICorner")
 playersCorner.CornerRadius = UDim.new(0, 10)
 playersCorner.Parent = playersFrame
 
-local playersStroke = Instance.new("UIStroke")
-playersStroke.Color = Color3.fromRGB(0, 150, 255)
-playersStroke.Thickness = 1
-playersStroke.Transparency = 0.7
-playersStroke.Parent = playersFrame
-
 local playersLayout = Instance.new("UIListLayout")
 playersLayout.Parent = playersFrame
 playersLayout.SortOrder = Enum.SortOrder.LayoutOrder
-playersLayout.Padding = UDim.new(0, 3)
+playersLayout.Padding = UDim.new(0, 5)
 
 -- Items List Frame
 local itemsFrame = Instance.new("ScrollingFrame")
-itemsFrame.Size = UDim2.new(1, -20, 0, 130)
-itemsFrame.Position = UDim2.new(0, 10, 0, 400)
-itemsFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-itemsFrame.BackgroundTransparency = 0.4
+itemsFrame.Size = UDim2.new(1, -20, 0, 150)
+itemsFrame.Position = UDim2.new(0, 10, 0, 430)
+itemsFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+itemsFrame.BackgroundTransparency = 0.3
 itemsFrame.BorderSizePixel = 0
 itemsFrame.ScrollBarThickness = 6
-itemsFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 150, 255)
+itemsFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 100, 50)
 itemsFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-itemsFrame.Parent = mainFrame
+itemsFrame.ZIndex = 3
+itemsFrame.Parent = contentFrame
 
 local itemsCorner = Instance.new("UICorner")
 itemsCorner.CornerRadius = UDim.new(0, 10)
 itemsCorner.Parent = itemsFrame
 
-local itemsStroke = Instance.new("UIStroke")
-itemsStroke.Color = Color3.fromRGB(0, 150, 255)
-itemsStroke.Thickness = 1
-itemsStroke.Transparency = 0.7
-itemsStroke.Parent = itemsFrame
-
 local itemsLayout = Instance.new("UIListLayout")
 itemsLayout.Parent = itemsFrame
 itemsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-itemsLayout.Padding = UDim.new(0, 3)
+itemsLayout.Padding = UDim.new(0, 5)
 
--- Steal Button
+-- Action Buttons
 local stealBtn = Instance.new("TextButton")
-stealBtn.Size = UDim2.new(1, -20, 0, 45)
-stealBtn.Position = UDim2.new(0, 10, 0, 540)
-stealBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-stealBtn.BackgroundTransparency = 0.3
+stealBtn.Size = UDim2.new(1, -20, 0, 55)
+stealBtn.Position = UDim2.new(0, 10, 0, 590)
+stealBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 50)
+stealBtn.BackgroundTransparency = 0.2
 stealBtn.Text = "💰 ขโมยไอเทม"
 stealBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-stealBtn.TextScaled = true
+stealBtn.TextSize = 18
 stealBtn.Font = Enum.Font.GothamBold
 stealBtn.BorderSizePixel = 0
-stealBtn.Parent = mainFrame
+stealBtn.ZIndex = 3
+stealBtn.Parent = contentFrame
 
 local stealBtnCorner = Instance.new("UICorner")
-stealBtnCorner.CornerRadius = UDim.new(0, 10)
+stealBtnCorner.CornerRadius = UDim.new(0, 12)
 stealBtnCorner.Parent = stealBtn
 
-local stealStroke = Instance.new("UIStroke")
-stealStroke.Color = Color3.fromRGB(255, 100, 50)
-stealStroke.Thickness = 2
-stealStroke.Parent = stealBtn
-
-local stealGradient = Instance.new("UIGradient")
-stealGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 50, 50)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 30, 30))
-}
-stealGradient.Rotation = 90
-stealGradient.Parent = stealBtn
-
--- Steal All from Selected Player Button
 local stealAllSelectedBtn = Instance.new("TextButton")
-stealAllSelectedBtn.Size = UDim2.new(1, -20, 0, 45)
-stealAllSelectedBtn.Position = UDim2.new(0, 10, 0, 595)
-stealAllSelectedBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-stealAllSelectedBtn.BackgroundTransparency = 0.3
+stealAllSelectedBtn.Size = UDim2.new(1, -20, 0, 55)
+stealAllSelectedBtn.Position = UDim2.new(0, 10, 0, 655)
+stealAllSelectedBtn.BackgroundColor3 = Color3.fromRGB(255, 150, 50)
+stealAllSelectedBtn.BackgroundTransparency = 0.2
 stealAllSelectedBtn.Text = "🎯 ขโมยทุกไอเทมจากผู้เล่นที่เลือก"
 stealAllSelectedBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-stealAllSelectedBtn.TextScaled = true
+stealAllSelectedBtn.TextSize = 16
 stealAllSelectedBtn.Font = Enum.Font.GothamBold
 stealAllSelectedBtn.BorderSizePixel = 0
-stealAllSelectedBtn.Parent = mainFrame
+stealAllSelectedBtn.ZIndex = 3
+stealAllSelectedBtn.Parent = contentFrame
 
 local stealAllSelectedBtnCorner = Instance.new("UICorner")
-stealAllSelectedBtnCorner.CornerRadius = UDim.new(0, 10)
+stealAllSelectedBtnCorner.CornerRadius = UDim.new(0, 12)
 stealAllSelectedBtnCorner.Parent = stealAllSelectedBtn
 
-local stealAllSelectedStroke = Instance.new("UIStroke")
-stealAllSelectedStroke.Color = Color3.fromRGB(255, 150, 50)
-stealAllSelectedStroke.Thickness = 2
-stealAllSelectedStroke.Parent = stealAllSelectedBtn
-
-local stealAllSelectedGradient = Instance.new("UIGradient")
-stealAllSelectedGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 120, 50)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 80, 30))
-}
-stealAllSelectedGradient.Rotation = 90
-stealAllSelectedGradient.Parent = stealAllSelectedBtn
-
--- Steal All from Everyone Button
 local stealAllBtn = Instance.new("TextButton")
-stealAllBtn.Size = UDim2.new(1, -20, 0, 45)
-stealAllBtn.Position = UDim2.new(0, 10, 0, 650)
-stealAllBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-stealAllBtn.BackgroundTransparency = 0.3
+stealAllBtn.Size = UDim2.new(1, -20, 0, 55)
+stealAllBtn.Position = UDim2.new(0, 10, 0, 720)
+stealAllBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 200)
+stealAllBtn.BackgroundTransparency = 0.2
 stealAllBtn.Text = "💀 ขโมยทุกไอเทมจากทุกคน"
 stealAllBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-stealAllBtn.TextScaled = true
+stealAllBtn.TextSize = 18
 stealAllBtn.Font = Enum.Font.GothamBold
 stealAllBtn.BorderSizePixel = 0
-stealAllBtn.Parent = mainFrame
+stealAllBtn.ZIndex = 3
+stealAllBtn.Parent = contentFrame
 
 local stealAllBtnCorner = Instance.new("UICorner")
-stealAllBtnCorner.CornerRadius = UDim.new(0, 10)
+stealAllBtnCorner.CornerRadius = UDim.new(0, 12)
 stealAllBtnCorner.Parent = stealAllBtn
-
-local stealAllStroke = Instance.new("UIStroke")
-stealAllStroke.Color = Color3.fromRGB(200, 50, 200)
-stealAllStroke.Thickness = 2
-stealAllStroke.Parent = stealAllBtn
-
-local stealAllGradient = Instance.new("UIGradient")
-stealAllGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 50, 150)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 30, 100))
-}
-stealAllGradient.Rotation = 90
-stealAllGradient.Parent = stealAllBtn
 
 -- Feedback Label
 local feedback = Instance.new("TextLabel")
-feedback.Size = UDim2.new(1, -20, 0, 40)
-feedback.Position = UDim2.new(0, 10, 0, 705)
+feedback.Size = UDim2.new(1, -20, 0, 60)
+feedback.Position = UDim2.new(0, 10, 0, 785)
 feedback.BackgroundTransparency = 1
 feedback.Text = "กดสแกนเพื่อค้นหาผู้เล่นใกล้เคียง"
 feedback.TextColor3 = Color3.fromRGB(255, 220, 100)
-feedback.TextScaled = true
+feedback.TextSize = 16
 feedback.Font = Enum.Font.GothamSemibold
 feedback.TextWrapped = true
-feedback.Parent = mainFrame
+feedback.ZIndex = 3
+feedback.Parent = contentFrame
 
 print("สร้าง UI สำเร็จแล้ว")
 
@@ -587,7 +555,7 @@ local function scanNearbyPlayers()
         btn.Position = UDim2.new(0, 5, 0, 0)
         btn.Text = playerData.player.Name .. " (" .. math.floor(playerData.distance) .. "m)"
         btn.TextColor3 = Color3.new(1, 1, 1)
-        btn.TextScaled = true
+        btn.TextSize = 16
         btn.Font = Enum.Font.GothamSemibold
         btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
         btn.BorderSizePixel = 0
@@ -684,7 +652,7 @@ local function showPlayerItems(playerData)
         btn.Position = UDim2.new(0, 5, 0, 0)
         btn.Text = itemData.tool.Name .. " (" .. itemData.location .. ")"
         btn.TextColor3 = Color3.new(1, 1, 1)
-        btn.TextScaled = true
+        btn.TextSize = 16
         btn.Font = Enum.Font.GothamSemibold
         btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
         btn.BorderSizePixel = 0
@@ -816,7 +784,7 @@ local function searchForItem()
         local distanceText = itemData.distance < math.huge and (" [" .. math.floor(itemData.distance) .. "m]") or " [Far]"
         btn.Text = itemData.tool.Name .. " (" .. itemData.location .. ") - " .. itemData.player.Name .. distanceText
         btn.TextColor3 = Color3.new(1, 1, 1)
-        btn.TextScaled = true
+        btn.TextSize = 16
         btn.Font = Enum.Font.GothamSemibold
         btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
         btn.BorderSizePixel = 0
@@ -1212,37 +1180,15 @@ rangeSlider.FocusLost:Connect(function()
     rangeLabel.Text = "🎯 ระยะสแกน: " .. rangeSlider.Text .. " หน่วย"
 end)
 
--- Auto update list every 5 seconds
-spawn(function()
-    while screenGui.Parent do
-        task.wait(5)
-        if selectedPlayer and selectedPlayer.player.Parent then
-            -- Update character references
-            char = player.Character
-            selectedPlayer.character = selectedPlayer.player.Character
-            
-            -- Check if player is still in range
-            if char and char:FindFirstChild("HumanoidRootPart") and 
-               selectedPlayer.character and selectedPlayer.character:FindFirstChild("HumanoidRootPart") then
-                local distance = getDistance(char.HumanoidRootPart.Position, selectedPlayer.character.HumanoidRootPart.Position)
-                selectedPlayer.distance = distance
-                
-                local scanRange = tonumber(rangeSlider.Text) or 50
-                if distance <= scanRange then
-                    showPlayerItems(selectedPlayer)
-                else
-                    feedback.Text = selectedPlayer.player.Name .. " ไกลเกินไป"
-                end
-            end
-        end
-    end
-end)
+-- Auto-open UI on first load
+wait(1)
+if not isUIVisible then
+    toggleUI()
+end
 
-print("ระบบขโมยไอเทมพร้อมใช้งาน!")
+print("ระบบขโมยไอเทมพร้อมใช้งาน! (รองรับมือถือ)")
 print("คำเตือน: ใช้เฉพาะในเซิร์ฟเวอร์ทดสอบเท่านั้น")
 print("วิธีใช้:")
+print("- กดปุ่ม 🔥 เพื่อเปิด/ปิด UI")
 print("- สแกนหาผู้เล่น -> เลือกผู้เล่น -> เลือกไอเทม -> ขโมย")
-print("- หรือพิมพ์ชื่อไอเทมเพื่อค้นหา -> เลือกไอเทม -> ขโมย") 
-print("- หรือเลือกผู้เล่น -> กด 'ขโมยทุกไอเทมจากผู้เล่นที่เลือก'")
-print("- หรือกด 'ขโมยทุกไอเทมจากทุกคน' เพื่อขโมยแบบรวบยวน")
-print("- กด R เพื่อรีเฟรชตัวละครหากไอเทมไม่แสดง")
+print("- หรือพิมพ์ชื่อไอเทมเพื่อค้นหา -> เลือกไอเทม -> ขโมย")
