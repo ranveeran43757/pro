@@ -1,7 +1,7 @@
 -- LocalScript in StarterPlayer -> StarterPlayerScripts
 -- Universal Item Stealer - Steal items from other players
 
-print("Universal Item Stealer Loading...")
+print("Universal Item Stealer กำลังโหลด...")
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -23,8 +23,8 @@ player.CharacterAdded:Connect(function(newChar)
     print("Humanoid updated successfully")
 end)
 
-print("Player:", player.Name)
-print("Services loaded successfully")
+print("ผู้เล่น:", player.Name)
+print("บริการโหลดสำเร็จแล้ว")
 
 -- Data variables
 local selectedPlayer = nil
@@ -38,28 +38,92 @@ screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.Parent = playerGui
 
--- Main Frame
+-- Toggle Button (Always visible)
+local toggleBtn = Instance.new("ImageButton")
+toggleBtn.Name = "ToggleButton"
+toggleBtn.Size = UDim2.new(0, 60, 0, 60)
+toggleBtn.Position = UDim2.new(0, 20, 0.5, -30)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+toggleBtn.BackgroundTransparency = 0.3
+toggleBtn.BorderSizePixel = 0
+toggleBtn.Image = "rbxassetid://135287785267863" -- Your logo
+toggleBtn.ScaleType = Enum.ScaleType.Fit
+toggleBtn.Active = true
+toggleBtn.Parent = screenGui
+
+-- Toggle button styling
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 30)
+toggleCorner.Parent = toggleBtn
+
+local toggleStroke = Instance.new("UIStroke")
+toggleStroke.Color = Color3.fromRGB(0, 150, 255)
+toggleStroke.Thickness = 2
+toggleStroke.Transparency = 0.5
+toggleStroke.Parent = toggleBtn
+
+-- Toggle button glow effect
+local toggleGlow = Instance.new("ImageLabel")
+toggleGlow.Size = UDim2.new(1.2, 0, 1.2, 0)
+toggleGlow.Position = UDim2.new(-0.1, 0, -0.1, 0)
+toggleGlow.BackgroundTransparency = 1
+toggleGlow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+toggleGlow.ImageColor3 = Color3.fromRGB(0, 150, 255)
+toggleGlow.ImageTransparency = 0.8
+toggleGlow.ZIndex = -1
+toggleGlow.Parent = toggleBtn
+
+-- Main Frame (Initially hidden)
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 380, 0, 680)
-mainFrame.Position = UDim2.new(0.5, -190, 0.5, -340)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+mainFrame.Size = UDim2.new(0, 420, 0, 750)
+mainFrame.Position = UDim2.new(0.5, -210, 0.5, -375)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BackgroundTransparency = 0.2
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
+mainFrame.Visible = false
 mainFrame.Parent = screenGui
 
--- Add corner for beauty
+-- Modern corner and styling
 local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 8)
+corner.CornerRadius = UDim.new(0, 15)
 corner.Parent = mainFrame
 
--- Gradient Background
+-- Modern stroke
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(0, 150, 255)
+stroke.Thickness = 1
+stroke.Transparency = 0.7
+stroke.Parent = mainFrame
+
+-- Glass effect background
+local glassEffect = Instance.new("Frame")
+glassEffect.Size = UDim2.new(1, 0, 1, 0)
+glassEffect.Position = UDim2.new(0, 0, 0, 0)
+glassEffect.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+glassEffect.BackgroundTransparency = 0.95
+glassEffect.BorderSizePixel = 0
+glassEffect.ZIndex = -1
+glassEffect.Parent = mainFrame
+
+local glassCorner = Instance.new("UICorner")
+glassCorner.CornerRadius = UDim.new(0, 15)
+glassCorner.Parent = glassEffect
+
+-- Modern gradient
 local gradient = Instance.new("UIGradient")
 gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 40)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 30))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 25)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 0, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 20))
 }
-gradient.Rotation = 45
+gradient.Rotation = 135
+gradient.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 0.1),
+    NumberSequenceKeypoint.new(0.5, 0.3),
+    NumberSequenceKeypoint.new(1, 0.1)
+}
 gradient.Parent = mainFrame
 
 -- Enable Dragging
@@ -99,22 +163,40 @@ end)
 
 -- Title Bar
 local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.Size = UDim2.new(1, 0, 0, 50)
 titleBar.Position = UDim2.new(0, 0, 0, 0)
-titleBar.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
+titleBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+titleBar.BackgroundTransparency = 0.1
 titleBar.BorderSizePixel = 0
 titleBar.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 8)
+titleCorner.CornerRadius = UDim.new(0, 15)
 titleCorner.Parent = titleBar
+
+local titleGradient = Instance.new("UIGradient")
+titleGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 200)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 50, 150))
+}
+titleGradient.Rotation = 90
+titleGradient.Parent = titleBar
+
+-- Logo in title
+local titleLogo = Instance.new("ImageLabel")
+titleLogo.Size = UDim2.new(0, 35, 0, 35)
+titleLogo.Position = UDim2.new(0, 10, 0, 7.5)
+titleLogo.BackgroundTransparency = 1
+titleLogo.Image = "rbxassetid://135287785267863"
+titleLogo.ScaleType = Enum.ScaleType.Fit
+titleLogo.Parent = titleBar
 
 -- Title Text
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -40, 1, 0)
-title.Position = UDim2.new(0, 8, 0, 0)
+title.Size = UDim2.new(1, -90, 1, 0)
+title.Position = UDim2.new(0, 50, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "Universal Item Stealer"
+title.Text = "🔥 ระบบขโมยไอเทม 🔥"
 title.TextColor3 = Color3.new(1, 1, 1)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -123,10 +205,10 @@ title.Parent = titleBar
 
 -- Close Button
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 30, 0, 30)
-closeBtn.Position = UDim2.new(1, -35, 0, 5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-closeBtn.Text = "ร—"
+closeBtn.Size = UDim2.new(0, 35, 0, 35)
+closeBtn.Position = UDim2.new(1, -42.5, 0, 7.5)
+closeBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+closeBtn.Text = "✕"
 closeBtn.TextColor3 = Color3.new(1, 1, 1)
 closeBtn.TextScaled = true
 closeBtn.Font = Enum.Font.GothamBold
@@ -134,99 +216,164 @@ closeBtn.BorderSizePixel = 0
 closeBtn.Parent = titleBar
 
 local closeBtnCorner = Instance.new("UICorner")
-closeBtnCorner.CornerRadius = UDim.new(0, 4)
+closeBtnCorner.CornerRadius = UDim.new(0, 17.5)
 closeBtnCorner.Parent = closeBtn
 
+-- Toggle functionality
+local isUIVisible = false
+
+local function toggleUI()
+    isUIVisible = not isUIVisible
+    
+    if isUIVisible then
+        mainFrame.Visible = true
+        -- Smooth fade in animation
+        local tween = TweenService:Create(
+            mainFrame,
+            TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Size = UDim2.new(0, 420, 0, 750), BackgroundTransparency = 0.2}
+        )
+        tween:Play()
+    else
+        -- Smooth fade out animation
+        local tween = TweenService:Create(
+            mainFrame,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            {Size = UDim2.new(0, 420, 0, 0), BackgroundTransparency = 1}
+        )
+        tween:Play()
+        tween.Completed:Connect(function()
+            mainFrame.Visible = false
+        end)
+    end
+end
+
+toggleBtn.MouseButton1Click:Connect(toggleUI)
 closeBtn.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
-    print("GUI Closed")
+    toggleUI()
 end)
 
 -- Scan Range Slider
 local rangeLabel = Instance.new("TextLabel")
-rangeLabel.Size = UDim2.new(1, -20, 0, 25)
-rangeLabel.Position = UDim2.new(0, 10, 0, 50)
+rangeLabel.Size = UDim2.new(1, -20, 0, 30)
+rangeLabel.Position = UDim2.new(0, 10, 0, 60)
 rangeLabel.BackgroundTransparency = 1
-rangeLabel.Text = "Scan Range: 50 units"
-rangeLabel.TextColor3 = Color3.new(1, 1, 1)
+rangeLabel.Text = "🎯 ระยะสแกน: 50 หน่วย"
+rangeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 rangeLabel.TextScaled = true
-rangeLabel.Font = Enum.Font.Gotham
+rangeLabel.Font = Enum.Font.GothamSemibold
 rangeLabel.TextXAlignment = Enum.TextXAlignment.Left
 rangeLabel.Parent = mainFrame
 
 local rangeSlider = Instance.new("TextBox")
-rangeSlider.Size = UDim2.new(1, -20, 0, 30)
-rangeSlider.Position = UDim2.new(0, 10, 0, 75)
-rangeSlider.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+rangeSlider.Size = UDim2.new(1, -20, 0, 35)
+rangeSlider.Position = UDim2.new(0, 10, 0, 90)
+rangeSlider.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+rangeSlider.BackgroundTransparency = 0.3
 rangeSlider.BorderSizePixel = 0
-rangeSlider.PlaceholderText = "Scan range (10-200)"
+rangeSlider.PlaceholderText = "ระยะสแกน (10-200)"
 rangeSlider.Text = "50"
-rangeSlider.TextColor3 = Color3.new(1, 1, 1)
+rangeSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
 rangeSlider.TextScaled = true
 rangeSlider.Font = Enum.Font.Gotham
 rangeSlider.Parent = mainFrame
 
 local rangeCorner = Instance.new("UICorner")
-rangeCorner.CornerRadius = UDim.new(0, 6)
+rangeCorner.CornerRadius = UDim.new(0, 8)
 rangeCorner.Parent = rangeSlider
+
+local rangeStroke = Instance.new("UIStroke")
+rangeStroke.Color = Color3.fromRGB(0, 150, 255)
+rangeStroke.Thickness = 1
+rangeStroke.Transparency = 0.7
+rangeStroke.Parent = rangeSlider
 
 -- Item Search Box
 local searchLabel = Instance.new("TextLabel")
-searchLabel.Size = UDim2.new(1, -20, 0, 25)
-searchLabel.Position = UDim2.new(0, 10, 0, 115)
+searchLabel.Size = UDim2.new(1, -20, 0, 30)
+searchLabel.Position = UDim2.new(0, 10, 0, 135)
 searchLabel.BackgroundTransparency = 1
-searchLabel.Text = "Search for Items:"
-searchLabel.TextColor3 = Color3.new(1, 1, 1)
+searchLabel.Text = "🔍 ค้นหาไอเทม:"
+searchLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 searchLabel.TextScaled = true
-searchLabel.Font = Enum.Font.Gotham
+searchLabel.Font = Enum.Font.GothamSemibold
 searchLabel.TextXAlignment = Enum.TextXAlignment.Left
 searchLabel.Parent = mainFrame
 
 local searchBox = Instance.new("TextBox")
-searchBox.Size = UDim2.new(1, -20, 0, 30)
-searchBox.Position = UDim2.new(0, 10, 0, 140)
-searchBox.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+searchBox.Size = UDim2.new(1, -20, 0, 35)
+searchBox.Position = UDim2.new(0, 10, 0, 165)
+searchBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+searchBox.BackgroundTransparency = 0.3
 searchBox.BorderSizePixel = 0
-searchBox.PlaceholderText = "Type item name to search..."
+searchBox.PlaceholderText = "พิมพ์ชื่อไอเทมที่ต้องการค้นหา..."
 searchBox.Text = ""
-searchBox.TextColor3 = Color3.new(1, 1, 1)
+searchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 searchBox.TextScaled = true
 searchBox.Font = Enum.Font.Gotham
 searchBox.Parent = mainFrame
 
 local searchCorner = Instance.new("UICorner")
-searchCorner.CornerRadius = UDim.new(0, 6)
+searchCorner.CornerRadius = UDim.new(0, 8)
 searchCorner.Parent = searchBox
+
+local searchStroke = Instance.new("UIStroke")
+searchStroke.Color = Color3.fromRGB(0, 150, 255)
+searchStroke.Thickness = 1
+searchStroke.Transparency = 0.7
+searchStroke.Parent = searchBox
 
 -- Scan Button
 local scanBtn = Instance.new("TextButton")
-scanBtn.Size = UDim2.new(1, -20, 0, 35)
-scanBtn.Position = UDim2.new(0, 10, 0, 180)
-scanBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 200)
-scanBtn.Text = "Scan for Players"
-scanBtn.TextColor3 = Color3.new(1, 1, 1)
+scanBtn.Size = UDim2.new(1, -20, 0, 40)
+scanBtn.Position = UDim2.new(0, 10, 0, 210)
+scanBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+scanBtn.BackgroundTransparency = 0.3
+scanBtn.Text = "🌐 สแกนหาผู้เล่น"
+scanBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 scanBtn.TextScaled = true
-scanBtn.Font = Enum.Font.GothamSemibold
+scanBtn.Font = Enum.Font.GothamBold
 scanBtn.BorderSizePixel = 0
 scanBtn.Parent = mainFrame
 
 local scanCorner = Instance.new("UICorner")
-scanCorner.CornerRadius = UDim.new(0, 6)
+scanCorner.CornerRadius = UDim.new(0, 10)
 scanCorner.Parent = scanBtn
+
+local scanStroke = Instance.new("UIStroke")
+scanStroke.Color = Color3.fromRGB(0, 200, 100)
+scanStroke.Thickness = 2
+scanStroke.Parent = scanBtn
+
+local scanGradient = Instance.new("UIGradient")
+scanGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 150, 75)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 50))
+}
+scanGradient.Rotation = 90
+scanGradient.Parent = scanBtn
 
 -- Players List Frame
 local playersFrame = Instance.new("ScrollingFrame")
-playersFrame.Size = UDim2.new(1, -20, 0, 120)
-playersFrame.Position = UDim2.new(0, 10, 0, 225)
-playersFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+playersFrame.Size = UDim2.new(1, -20, 0, 130)
+playersFrame.Position = UDim2.new(0, 10, 0, 260)
+playersFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+playersFrame.BackgroundTransparency = 0.4
 playersFrame.BorderSizePixel = 0
-playersFrame.ScrollBarThickness = 8
+playersFrame.ScrollBarThickness = 6
+playersFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 150, 255)
 playersFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 playersFrame.Parent = mainFrame
 
 local playersCorner = Instance.new("UICorner")
-playersCorner.CornerRadius = UDim.new(0, 6)
+playersCorner.CornerRadius = UDim.new(0, 10)
 playersCorner.Parent = playersFrame
+
+local playersStroke = Instance.new("UIStroke")
+playersStroke.Color = Color3.fromRGB(0, 150, 255)
+playersStroke.Thickness = 1
+playersStroke.Transparency = 0.7
+playersStroke.Parent = playersFrame
 
 local playersLayout = Instance.new("UIListLayout")
 playersLayout.Parent = playersFrame
@@ -235,17 +382,25 @@ playersLayout.Padding = UDim.new(0, 3)
 
 -- Items List Frame
 local itemsFrame = Instance.new("ScrollingFrame")
-itemsFrame.Size = UDim2.new(1, -20, 0, 120)
-itemsFrame.Position = UDim2.new(0, 10, 0, 355)
-itemsFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+itemsFrame.Size = UDim2.new(1, -20, 0, 130)
+itemsFrame.Position = UDim2.new(0, 10, 0, 400)
+itemsFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+itemsFrame.BackgroundTransparency = 0.4
 itemsFrame.BorderSizePixel = 0
-itemsFrame.ScrollBarThickness = 8
+itemsFrame.ScrollBarThickness = 6
+itemsFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 150, 255)
 itemsFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 itemsFrame.Parent = mainFrame
 
 local itemsCorner = Instance.new("UICorner")
-itemsCorner.CornerRadius = UDim.new(0, 6)
+itemsCorner.CornerRadius = UDim.new(0, 10)
 itemsCorner.Parent = itemsFrame
+
+local itemsStroke = Instance.new("UIStroke")
+itemsStroke.Color = Color3.fromRGB(0, 150, 255)
+itemsStroke.Thickness = 1
+itemsStroke.Transparency = 0.7
+itemsStroke.Parent = itemsFrame
 
 local itemsLayout = Instance.new("UIListLayout")
 itemsLayout.Parent = itemsFrame
@@ -254,65 +409,107 @@ itemsLayout.Padding = UDim.new(0, 3)
 
 -- Steal Button
 local stealBtn = Instance.new("TextButton")
-stealBtn.Size = UDim2.new(1, -20, 0, 40)
-stealBtn.Position = UDim2.new(0, 10, 0, 485)
-stealBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-stealBtn.Text = "Steal Item"
-stealBtn.TextColor3 = Color3.new(1, 1, 1)
+stealBtn.Size = UDim2.new(1, -20, 0, 45)
+stealBtn.Position = UDim2.new(0, 10, 0, 540)
+stealBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+stealBtn.BackgroundTransparency = 0.3
+stealBtn.Text = "💰 ขโมยไอเทม"
+stealBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 stealBtn.TextScaled = true
 stealBtn.Font = Enum.Font.GothamBold
 stealBtn.BorderSizePixel = 0
 stealBtn.Parent = mainFrame
 
 local stealBtnCorner = Instance.new("UICorner")
-stealBtnCorner.CornerRadius = UDim.new(0, 6)
+stealBtnCorner.CornerRadius = UDim.new(0, 10)
 stealBtnCorner.Parent = stealBtn
+
+local stealStroke = Instance.new("UIStroke")
+stealStroke.Color = Color3.fromRGB(255, 100, 50)
+stealStroke.Thickness = 2
+stealStroke.Parent = stealBtn
+
+local stealGradient = Instance.new("UIGradient")
+stealGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 50, 50)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 30, 30))
+}
+stealGradient.Rotation = 90
+stealGradient.Parent = stealBtn
 
 -- Steal All from Selected Player Button
 local stealAllSelectedBtn = Instance.new("TextButton")
-stealAllSelectedBtn.Size = UDim2.new(1, -20, 0, 40)
-stealAllSelectedBtn.Position = UDim2.new(0, 10, 0, 535)
-stealAllSelectedBtn.BackgroundColor3 = Color3.fromRGB(200, 120, 60)
-stealAllSelectedBtn.Text = "Steal All Items from Selected Player"
-stealAllSelectedBtn.TextColor3 = Color3.new(1, 1, 1)
+stealAllSelectedBtn.Size = UDim2.new(1, -20, 0, 45)
+stealAllSelectedBtn.Position = UDim2.new(0, 10, 0, 595)
+stealAllSelectedBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+stealAllSelectedBtn.BackgroundTransparency = 0.3
+stealAllSelectedBtn.Text = "🎯 ขโมยทุกไอเทมจากผู้เล่นที่เลือก"
+stealAllSelectedBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 stealAllSelectedBtn.TextScaled = true
 stealAllSelectedBtn.Font = Enum.Font.GothamBold
 stealAllSelectedBtn.BorderSizePixel = 0
 stealAllSelectedBtn.Parent = mainFrame
 
 local stealAllSelectedBtnCorner = Instance.new("UICorner")
-stealAllSelectedBtnCorner.CornerRadius = UDim.new(0, 6)
+stealAllSelectedBtnCorner.CornerRadius = UDim.new(0, 10)
 stealAllSelectedBtnCorner.Parent = stealAllSelectedBtn
+
+local stealAllSelectedStroke = Instance.new("UIStroke")
+stealAllSelectedStroke.Color = Color3.fromRGB(255, 150, 50)
+stealAllSelectedStroke.Thickness = 2
+stealAllSelectedStroke.Parent = stealAllSelectedBtn
+
+local stealAllSelectedGradient = Instance.new("UIGradient")
+stealAllSelectedGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 120, 50)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 80, 30))
+}
+stealAllSelectedGradient.Rotation = 90
+stealAllSelectedGradient.Parent = stealAllSelectedBtn
 
 -- Steal All from Everyone Button
 local stealAllBtn = Instance.new("TextButton")
-stealAllBtn.Size = UDim2.new(1, -20, 0, 40)
-stealAllBtn.Position = UDim2.new(0, 10, 0, 585)
-stealAllBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 150)
-stealAllBtn.Text = "Steal All Items from Everyone"
-stealAllBtn.TextColor3 = Color3.new(1, 1, 1)
+stealAllBtn.Size = UDim2.new(1, -20, 0, 45)
+stealAllBtn.Position = UDim2.new(0, 10, 0, 650)
+stealAllBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+stealAllBtn.BackgroundTransparency = 0.3
+stealAllBtn.Text = "💀 ขโมยทุกไอเทมจากทุกคน"
+stealAllBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 stealAllBtn.TextScaled = true
 stealAllBtn.Font = Enum.Font.GothamBold
 stealAllBtn.BorderSizePixel = 0
 stealAllBtn.Parent = mainFrame
 
 local stealAllBtnCorner = Instance.new("UICorner")
-stealAllBtnCorner.CornerRadius = UDim.new(0, 6)
+stealAllBtnCorner.CornerRadius = UDim.new(0, 10)
 stealAllBtnCorner.Parent = stealAllBtn
+
+local stealAllStroke = Instance.new("UIStroke")
+stealAllStroke.Color = Color3.fromRGB(200, 50, 200)
+stealAllStroke.Thickness = 2
+stealAllStroke.Parent = stealAllBtn
+
+local stealAllGradient = Instance.new("UIGradient")
+stealAllGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 50, 150)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 30, 100))
+}
+stealAllGradient.Rotation = 90
+stealAllGradient.Parent = stealAllBtn
 
 -- Feedback Label
 local feedback = Instance.new("TextLabel")
-feedback.Size = UDim2.new(1, -20, 0, 35)
-feedback.Position = UDim2.new(0, 10, 0, 635)
+feedback.Size = UDim2.new(1, -20, 0, 40)
+feedback.Position = UDim2.new(0, 10, 0, 705)
 feedback.BackgroundTransparency = 1
-feedback.Text = "Click scan to find nearby players"
+feedback.Text = "กดสแกนเพื่อค้นหาผู้เล่นใกล้เคียง"
 feedback.TextColor3 = Color3.fromRGB(255, 220, 100)
 feedback.TextScaled = true
-feedback.Font = Enum.Font.Gotham
+feedback.Font = Enum.Font.GothamSemibold
 feedback.TextWrapped = true
 feedback.Parent = mainFrame
 
-print("All UI elements created")
+print("สร้าง UI สำเร็จแล้ว")
 
 -- Distance calculation function
 local function getDistance(pos1, pos2)
@@ -342,10 +539,10 @@ local function scanNearbyPlayers()
     nearbyPlayers = {}
     local scanRange = tonumber(rangeSlider.Text) or 50
     scanRange = math.clamp(scanRange, 10, 200)
-    rangeLabel.Text = "Scan Range: " .. scanRange .. " units"
+    rangeLabel.Text = "🎯 ระยะสแกน: " .. scanRange .. " หน่วย"
     
     if not char or not char:FindFirstChild("HumanoidRootPart") then
-        feedback.Text = "Your character not found"
+        feedback.Text = "ไม่พบตัวละครของคุณ"
         return
     end
     
@@ -374,7 +571,7 @@ local function scanNearbyPlayers()
     print("Found nearby players:", #nearbyPlayers, "players")
     
     if #nearbyPlayers == 0 then
-        feedback.Text = "No players found within " .. scanRange .. " units"
+        feedback.Text = "ไม่พบผู้เล่นในระยะ " .. scanRange .. " หน่วย"
         return
     end
     
@@ -420,7 +617,7 @@ local function scanNearbyPlayers()
     
     -- Update Canvas Size
     playersFrame.CanvasSize = UDim2.new(0, 0, 0, playersLayout.AbsoluteContentSize.Y + 10)
-    feedback.Text = "Found players: " .. #nearbyPlayers .. " players"
+    feedback.Text = "พบผู้เล่น: " .. #nearbyPlayers .. " คน"
 end
 
 -- Show player items function
@@ -471,9 +668,9 @@ local function showPlayerItems(playerData)
     
     if #items == 0 then
         if searchTerm ~= "" then
-            feedback.Text = "No items matching '" .. searchBox.Text .. "' found for " .. playerData.player.Name
+            feedback.Text = "ไม่พบไอเทมที่ตรงกับ '" .. searchBox.Text .. "' สำหรับ " .. playerData.player.Name
         else
-            feedback.Text = playerData.player.Name .. " has no items"
+            feedback.Text = playerData.player.Name .. " ไม่มีไอเทม"
         end
         return
     end
@@ -509,20 +706,20 @@ local function showPlayerItems(playerData)
             
             -- Change selected button color
             btn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-            feedback.Text = "Selected: " .. itemData.tool.Name .. " from " .. playerData.player.Name
+            feedback.Text = "เลือกแล้ว: " .. itemData.tool.Name .. " จาก " .. playerData.player.Name
         end)
     end
     
     -- Update Canvas Size
     itemsFrame.CanvasSize = UDim2.new(0, 0, 0, itemsLayout.AbsoluteContentSize.Y + 10)
-    feedback.Text = playerData.player.Name .. " has items: " .. #items .. " items"
+    feedback.Text = playerData.player.Name .. " มีไอเทม: " .. #items .. " ชิ้น"
 end
 
 -- Search for specific item across all players
 local function searchForItem()
     local searchTerm = searchBox.Text:lower()
     if searchTerm == "" then
-        feedback.Text = "Please enter an item name to search"
+        feedback.Text = "กรุณาใส่ชื่อไอเทมที่ต้องการค้นหา"
         return
     end
     
@@ -549,7 +746,7 @@ local function searchForItem()
     char = player.Character
     
     if not char or not char:FindFirstChild("HumanoidRootPart") then
-        feedback.Text = "Your character not found"
+        feedback.Text = "ไม่พบตัวละครของคุณ"
         return
     end
     
@@ -601,7 +798,7 @@ local function searchForItem()
     print("Found", #foundItems, "items matching:", searchBox.Text)
     
     if #foundItems == 0 then
-        feedback.Text = "No items matching '" .. searchBox.Text .. "' found"
+        feedback.Text = "ไม่พบไอเทมที่ตรงกับ '" .. searchBox.Text .. "'"
         return
     end
     
@@ -646,13 +843,13 @@ local function searchForItem()
             
             -- Change selected button color
             btn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-            feedback.Text = "Selected: " .. itemData.tool.Name .. " from " .. itemData.player.Name
+            feedback.Text = "เลือกแล้ว: " .. itemData.tool.Name .. " จาก " .. itemData.player.Name
         end)
     end
     
     -- Update Canvas Size
     itemsFrame.CanvasSize = UDim2.new(0, 0, 0, itemsLayout.AbsoluteContentSize.Y + 10)
-    feedback.Text = "Found " .. #foundItems .. " items matching '" .. searchBox.Text .. "'"
+    feedback.Text = "พบ " .. #foundItems .. " ไอเทมที่ตรงกับ '" .. searchBox.Text .. "'"
 end
 
 -- Steal item function
@@ -660,19 +857,19 @@ local function stealItem()
     print("Starting theft...")
     
     if not selectedPlayer then
-        feedback.Text = "Please select a player first"
+        feedback.Text = "กรุณาเลือกผู้เล่นก่อน"
         return
     end
     
     if not selectedTool then
-        feedback.Text = "Please select an item first"
+        feedback.Text = "กรุณาเลือกไอเทมก่อน"
         return
     end
     
     local targetTool = selectedTool.tool
     
     if not targetTool or not targetTool.Parent then
-        feedback.Text = "Item is gone"
+        feedback.Text = "ไอเทมหาย"
         return
     end
     
@@ -713,7 +910,7 @@ local function stealItem()
     end
     
     if success then
-        feedback.Text = ("Stole \"%s\" from %s successfully!"):format(targetTool.Name, selectedPlayer.player.Name)
+        feedback.Text = ("ขโมย \"%s\" จาก %s สำเร็จ!"):format(targetTool.Name, selectedPlayer.player.Name)
         
         -- Force equip the stolen item to make it visible
         pcall(function()
@@ -729,19 +926,19 @@ local function stealItem()
             showPlayerItems(selectedPlayer)
         end
     else
-        feedback.Text = "Cannot steal - server has protection"
+        feedback.Text = "ไม่สามารถขโมยได้ - เซิร์ฟเวอร์มีการป้องกัน"
     end
 end
 
 -- Steal all items from selected player function
 local function stealAllFromSelectedPlayer()
     if not selectedPlayer then
-        feedback.Text = "Please select a player first"
+        feedback.Text = "กรุณาเลือกผู้เล่นก่อน"
         return
     end
     
     print("Starting theft from selected player:", selectedPlayer.player.Name)
-    feedback.Text = "Stealing all items from " .. selectedPlayer.player.Name .. "..."
+    feedback.Text = "กำลังขโมยทุกไอเทมจาก " .. selectedPlayer.player.Name .. "..."
     
     local totalStolen = 0
     local targetPlayer = selectedPlayer.player
@@ -799,7 +996,7 @@ local function stealAllFromSelectedPlayer()
         end
     end
     
-    feedback.Text = ("Stole %d items from %s successfully!"):format(totalStolen, targetPlayer.Name)
+    feedback.Text = ("ขโมย %d ไอเทมจาก %s สำเร็จ!"):format(totalStolen, targetPlayer.Name)
     print("Theft from", targetPlayer.Name, "finished! Total items stolen:", totalStolen)
     
     -- Auto equip last stolen item to make it visible
@@ -823,7 +1020,7 @@ end
 -- Steal all items from everyone function
 local function stealAllItems()
     print("Starting mass theft...")
-    feedback.Text = "Stealing all items from everyone..."
+    feedback.Text = "กำลังขโมยทุกไอเทมจากทุกคน..."
     
     local totalStolen = 0
     local scanRange = tonumber(rangeSlider.Text) or 50
@@ -833,7 +1030,7 @@ local function stealAllItems()
     char = player.Character
     
     if not char or not char:FindFirstChild("HumanoidRootPart") then
-        feedback.Text = "Your character not found"
+        feedback.Text = "ไม่พบตัวละครของคุณ"
         return
     end
     
@@ -907,7 +1104,7 @@ local function stealAllItems()
         end
     end
     
-    feedback.Text = ("Mass theft complete! Stole %d items total"):format(totalStolen)
+    feedback.Text = ("การขโมยแบบรวบยอดเสร็จสิ้น! ขโมย %d ไอเทมรวม":format(totalStolen)
     print("Mass theft finished! Total items stolen:", totalStolen)
     
     -- Auto equip last stolen item to make it visible
@@ -974,7 +1171,7 @@ searchBox.Changed:Connect(function(property)
                 end
             end
             itemsFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-            feedback.Text = "Type item name to search across all players"
+            feedback.Text = "พิมพ์ชื่อไอเทมเพื่อค้นหาทั่วทั้งผู้เล่น"
         end
     end
 end)
@@ -994,10 +1191,10 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if char then
             humanoid = char:FindFirstChild("Humanoid")
             backpack = player:WaitForChild("Backpack")
-            feedback.Text = "Character references updated! (Press R to refresh)"
+            feedback.Text = "อัปเดตข้อมูลตัวละครแล้ว! (กด R เพื่อรีเฟรช)"
             print("Manual character update completed")
         else
-            feedback.Text = "Character not found!"
+            feedback.Text = "ไม่พบตัวละคร!"
         end
     end
 end)
@@ -1012,7 +1209,7 @@ rangeSlider.FocusLost:Connect(function()
     else
         rangeSlider.Text = tostring(math.floor(num))
     end
-    rangeLabel.Text = "Scan Range: " .. rangeSlider.Text .. " units"
+    rangeLabel.Text = "🎯 ระยะสแกน: " .. rangeSlider.Text .. " หน่วย"
 end)
 
 -- Auto update list every 5 seconds
@@ -1034,18 +1231,18 @@ spawn(function()
                 if distance <= scanRange then
                     showPlayerItems(selectedPlayer)
                 else
-                    feedback.Text = selectedPlayer.player.Name .. " is too far away"
+                    feedback.Text = selectedPlayer.player.Name .. " ไกลเกินไป"
                 end
             end
         end
     end
 end)
 
-print("Universal Item Stealer ready!")
-print("Warning: Use only on test servers")
-print("How to use:")
-print("- Scan for players -> Select player -> Select item -> Steal")
-print("- OR type item name to search -> Select item -> Steal") 
-print("- OR select player -> click 'Steal All Items from Selected Player'")
-print("- OR click 'Steal All Items from Everyone' for mass theft")
-print("- Press R key to refresh character if items don't show properly")
+print("ระบบขโมยไอเทมพร้อมใช้งาน!")
+print("คำเตือน: ใช้เฉพาะในเซิร์ฟเวอร์ทดสอบเท่านั้น")
+print("วิธีใช้:")
+print("- สแกนหาผู้เล่น -> เลือกผู้เล่น -> เลือกไอเทม -> ขโมย")
+print("- หรือพิมพ์ชื่อไอเทมเพื่อค้นหา -> เลือกไอเทม -> ขโมย") 
+print("- หรือเลือกผู้เล่น -> กด 'ขโมยทุกไอเทมจากผู้เล่นที่เลือก'")
+print("- หรือกด 'ขโมยทุกไอเทมจากทุกคน' เพื่อขโมยแบบรวบยวน")
+print("- กด R เพื่อรีเฟรชตัวละครหากไอเทมไม่แสดง")
