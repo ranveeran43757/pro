@@ -46,7 +46,7 @@ toggleButton.Position = UDim2.new(0, 20, 0, 20)
 toggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 toggleButton.BackgroundTransparency = 0.3
 toggleButton.BorderSizePixel = 0
-toggleButton.Image = "https://imagelink.dccr.xyz/uploads/688d82b231dd8.png"
+toggleButton.Image = "rbxassetid://135287785267863"
 toggleButton.ScaleType = Enum.ScaleType.Fit
 toggleButton.Parent = screenGui
 
@@ -194,7 +194,7 @@ local titleLogo = Instance.new("ImageLabel")
 titleLogo.Size = UDim2.new(0, 35, 0, 35)
 titleLogo.Position = UDim2.new(0, 10, 0, 7.5)
 titleLogo.BackgroundTransparency = 1
-titleLogo.Image = "https://imagelink.dccr.xyz/uploads/688d82b231dd8.png"
+titleLogo.Image = "rbxassetid://135287785267863"
 titleLogo.ScaleType = Enum.ScaleType.Fit
 titleLogo.Parent = titleBar
 
