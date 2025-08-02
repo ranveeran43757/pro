@@ -1,10 +1,7 @@
 -- LocalScript in StarterPlayer -> StarterPlayerScripts
--- ตัวขโมยของ - ขโมยไอเทมจากผู้เล่นคนอื่น
+-- Universal Item Stealer - Steal items from other players
 
--- รอให้โหลดเสร็จก่อน
-wait(1)
-
-print("กำลังโหลดตัวขโมยของ...")
+print("Universal Item Stealer Loading...")
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -13,133 +10,61 @@ local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
-
--- รอให้ตัวละครโหลดเสร็จ
-repeat wait() until player.Character
-local char = player.Character
-local humanoid = char:WaitForChild("Humanoid")
 local backpack = player:WaitForChild("Backpack")
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
 
--- อัปเดตตัวละครเมื่อเกิดใหม่
+-- Update character when respawned
 player.CharacterAdded:Connect(function(newChar)
     char = newChar
     humanoid = newChar:WaitForChild("Humanoid")
-    backpack = player:WaitForChild("Backpack") -- อัปเดต backpack reference ด้วย
-    print("อัปเดตตัวละครแล้ว:", player.Name)
-    print("อัปเดต Humanoid สำเร็จ")
+    backpack = player:WaitForChild("Backpack") -- Update backpack reference too
+    print("Character updated:", player.Name)
+    print("Humanoid updated successfully")
 end)
 
-print("ผู้เล่น:", player.Name)
-print("โหลดบริการทั้งหมดสำเร็จ")
+print("Player:", player.Name)
+print("Services loaded successfully")
 
--- ตัวแปรข้อมูล
+-- Data variables
 local selectedPlayer = nil
 local selectedTool = nil
 local nearbyPlayers = {}
 
--- สร้าง ScreenGui
+-- Create ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "UniversalItemStealer"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.Parent = playerGui
 
--- ปุ่มเปิด/ปิด (แสดงเสมอ)
-local toggleButton = Instance.new("ImageButton")
-toggleButton.Name = "ToggleButton"
-toggleButton.Size = UDim2.new(0, 60, 0, 60)
-toggleButton.Position = UDim2.new(0, 20, 0, 20)
-toggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-toggleButton.BackgroundTransparency = 0.3
-toggleButton.BorderSizePixel = 0
-toggleButton.Image = "http://www.roblox.com/asset/?id=135287785267863"
-toggleButton.ScaleType = Enum.ScaleType.Fit
-toggleButton.Parent = screenGui
-
--- มุมปุ่มเปิด/ปิด
-local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(0, 12)
-toggleCorner.Parent = toggleButton
-
--- เอฟเฟกต์เรืองแสงปุ่มเปิด/ปิด
-local toggleGlow = Instance.new("UIStroke")
-toggleGlow.Color = Color3.fromRGB(100, 200, 255)
-toggleGlow.Thickness = 2
-toggleGlow.Transparency = 0.5
-toggleGlow.Parent = toggleButton
-
--- หน้าต่างหลัก
+-- Main Frame
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 420, 0, 720)
-mainFrame.Position = UDim2.new(0.5, -210, 0.5, -360)
-mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-mainFrame.BackgroundTransparency = 0.2
+mainFrame.Size = UDim2.new(0, 380, 0, 680)
+mainFrame.Position = UDim2.new(0.5, -190, 0.5, -340)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
-mainFrame.Visible = false
 mainFrame.Parent = screenGui
 
--- เพิ่มมุมสำหรับความสวยงาม
+-- Add corner for beauty
 local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 15)
+corner.CornerRadius = UDim.new(0, 8)
 corner.Parent = mainFrame
 
--- เส้นขอบเอฟเฟกต์กระจก
-local glassBorder = Instance.new("UIStroke")
-glassBorder.Color = Color3.fromRGB(255, 255, 255)
-glassBorder.Thickness = 1
-glassBorder.Transparency = 0.8
-glassBorder.Parent = mainFrame
-
--- เอฟเฟกต์พื้นหลังเบลอ
-local blurFrame = Instance.new("Frame")
-blurFrame.Size = UDim2.new(1, 0, 1, 0)
-blurFrame.Position = UDim2.new(0, 0, 0, 0)
-blurFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-blurFrame.BackgroundTransparency = 0.1
-blurFrame.BorderSizePixel = 0
-blurFrame.Parent = mainFrame
-
-local blurCorner = Instance.new("UICorner")
-blurCorner.CornerRadius = UDim.new(0, 15)
-blurCorner.Parent = blurFrame
-
--- พื้นหลังไล่สีแบบเคลื่อนไหว
+-- Gradient Background
 local gradient = Instance.new("UIGradient")
 gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 30)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(30, 15, 40)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 25, 35))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 40)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 30))
 }
 gradient.Rotation = 45
-gradient.Parent = blurFrame
+gradient.Parent = mainFrame
 
--- เปิดใช้งานการลาก
+-- Enable Dragging
 local dragging = false
 local dragStart, startPos, dragInput
-
--- ฟังก์ชันเปิด/ปิด
-local isUIVisible = false
-
-toggleButton.MouseButton1Click:Connect(function()
-    isUIVisible = not isUIVisible
-    mainFrame.Visible = isUIVisible
-    
-    -- แอนิเมชันปุ่ม
-    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(toggleButton, tweenInfo, {
-        Size = isUIVisible and UDim2.new(0, 70, 0, 70) or UDim2.new(0, 60, 0, 60),
-        BackgroundTransparency = isUIVisible and 0.1 or 0.3
-    })
-    tween:Play()
-    
-    -- เอฟเฟกต์เรืองแสงเมื่อเปิด UI
-    toggleGlow.Transparency = isUIVisible and 0.2 or 0.5
-    toggleGlow.Color = isUIVisible and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(100, 200, 255)
-    
-    print(isUIVisible and "เปิด UI แล้ว" or "ปิด UI แล้ว")
-end)
 
 mainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or
@@ -172,59 +97,36 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- แถบหัวเรื่อง
+-- Title Bar
 local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 50)
+titleBar.Size = UDim2.new(1, 0, 0, 40)
 titleBar.Position = UDim2.new(0, 0, 0, 0)
-titleBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-titleBar.BackgroundTransparency = 0.4
+titleBar.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
 titleBar.BorderSizePixel = 0
 titleBar.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 15)
+titleCorner.CornerRadius = UDim.new(0, 8)
 titleCorner.Parent = titleBar
 
--- ไล่สีแถบหัวเรื่อง
-local titleGradient = Instance.new("UIGradient")
-titleGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 150, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 200))
-}
-titleGradient.Rotation = 90
-titleGradient.Parent = titleBar
-
--- โลโก้หัวเรื่อง
-local titleLogo = Instance.new("ImageLabel")
-titleLogo.Size = UDim2.new(0, 35, 0, 35)
-titleLogo.Position = UDim2.new(0, 10, 0, 7.5)
-titleLogo.BackgroundTransparency = 1
-titleLogo.Image = "http://www.roblox.com/asset/?id=135287785267863"
-titleLogo.ScaleType = Enum.ScaleType.Fit
-titleLogo.Parent = titleBar
-
--- ข้อความหัวเรื่อง
+-- Title Text
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -90, 1, 0)
-title.Position = UDim2.new(0, 50, 0, 0)
+title.Size = UDim2.new(1, -40, 1, 0)
+title.Position = UDim2.new(0, 8, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "ตัวขโมยของสากล"
+title.Text = "Universal Item Stealer"
 title.TextColor3 = Color3.new(1, 1, 1)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.TextStrokeTransparency = 0.5
-title.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 title.Parent = titleBar
 
 -- Close Button
 local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 35, 0, 35)
-closeBtn.Position = UDim2.new(1, -45, 0, 7.5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-closeBtn.BackgroundTransparency = 0.2
-closeBtn.Text = "✕"
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -35, 0, 5)
+closeBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+closeBtn.Text = "ร—"
 closeBtn.TextColor3 = Color3.new(1, 1, 1)
 closeBtn.TextScaled = true
 closeBtn.Font = Enum.Font.GothamBold
@@ -232,163 +134,99 @@ closeBtn.BorderSizePixel = 0
 closeBtn.Parent = titleBar
 
 local closeBtnCorner = Instance.new("UICorner")
-closeBtnCorner.CornerRadius = UDim.new(0, 8)
+closeBtnCorner.CornerRadius = UDim.new(0, 4)
 closeBtnCorner.Parent = closeBtn
 
--- Close Button Glow
-local closeBtnStroke = Instance.new("UIStroke")
-closeBtnStroke.Color = Color3.fromRGB(255, 100, 100)
-closeBtnStroke.Thickness = 1
-closeBtnStroke.Transparency = 0.6
-closeBtnStroke.Parent = closeBtn
-
 closeBtn.MouseButton1Click:Connect(function()
-    isUIVisible = false
-    mainFrame.Visible = false
-    
-    -- อัปเดตปุ่มเปิด/ปิด
-    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(toggleButton, tweenInfo, {
-        Size = UDim2.new(0, 60, 0, 60),
-        BackgroundTransparency = 0.3
-    })
-    tween:Play()
-    
-    toggleGlow.Transparency = 0.5
-    toggleGlow.Color = Color3.fromRGB(100, 200, 255)
-    
-    print("ปิด GUI แล้ว")
+    screenGui:Destroy()
+    print("GUI Closed")
 end)
 
--- แถบเลื่อนระยะสแกน
+-- Scan Range Slider
 local rangeLabel = Instance.new("TextLabel")
 rangeLabel.Size = UDim2.new(1, -20, 0, 25)
-rangeLabel.Position = UDim2.new(0, 10, 0, 60)
+rangeLabel.Position = UDim2.new(0, 10, 0, 50)
 rangeLabel.BackgroundTransparency = 1
-rangeLabel.Text = "ระยะสแกน: 50 หน่วย"
-rangeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+rangeLabel.Text = "Scan Range: 50 units"
+rangeLabel.TextColor3 = Color3.new(1, 1, 1)
 rangeLabel.TextScaled = true
-rangeLabel.Font = Enum.Font.GothamSemibold
+rangeLabel.Font = Enum.Font.Gotham
 rangeLabel.TextXAlignment = Enum.TextXAlignment.Left
-rangeLabel.TextStrokeTransparency = 0.8
-rangeLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 rangeLabel.Parent = mainFrame
 
 local rangeSlider = Instance.new("TextBox")
-rangeSlider.Size = UDim2.new(1, -20, 0, 35)
-rangeSlider.Position = UDim2.new(0, 10, 0, 85)
-rangeSlider.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-rangeSlider.BackgroundTransparency = 0.3
+rangeSlider.Size = UDim2.new(1, -20, 0, 30)
+rangeSlider.Position = UDim2.new(0, 10, 0, 75)
+rangeSlider.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 rangeSlider.BorderSizePixel = 0
-rangeSlider.PlaceholderText = "ระยะสแกน (10-200)"
-rangeSlider.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+rangeSlider.PlaceholderText = "Scan range (10-200)"
 rangeSlider.Text = "50"
-rangeSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+rangeSlider.TextColor3 = Color3.new(1, 1, 1)
 rangeSlider.TextScaled = true
 rangeSlider.Font = Enum.Font.Gotham
 rangeSlider.Parent = mainFrame
 
 local rangeCorner = Instance.new("UICorner")
-rangeCorner.CornerRadius = UDim.new(0, 8)
+rangeCorner.CornerRadius = UDim.new(0, 6)
 rangeCorner.Parent = rangeSlider
 
-local rangeStroke = Instance.new("UIStroke")
-rangeStroke.Color = Color3.fromRGB(100, 150, 255)
-rangeStroke.Thickness = 1
-rangeStroke.Transparency = 0.7
-rangeStroke.Parent = rangeSlider
-
--- กล่องค้นหาไอเทม
+-- Item Search Box
 local searchLabel = Instance.new("TextLabel")
 searchLabel.Size = UDim2.new(1, -20, 0, 25)
-searchLabel.Position = UDim2.new(0, 10, 0, 130)
+searchLabel.Position = UDim2.new(0, 10, 0, 115)
 searchLabel.BackgroundTransparency = 1
-searchLabel.Text = "ค้นหาไอเทม:"
-searchLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+searchLabel.Text = "Search for Items:"
+searchLabel.TextColor3 = Color3.new(1, 1, 1)
 searchLabel.TextScaled = true
-searchLabel.Font = Enum.Font.GothamSemibold
+searchLabel.Font = Enum.Font.Gotham
 searchLabel.TextXAlignment = Enum.TextXAlignment.Left
-searchLabel.TextStrokeTransparency = 0.8
-searchLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 searchLabel.Parent = mainFrame
 
 local searchBox = Instance.new("TextBox")
-searchBox.Size = UDim2.new(1, -20, 0, 35)
-searchBox.Position = UDim2.new(0, 10, 0, 155)
-searchBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-searchBox.BackgroundTransparency = 0.3
+searchBox.Size = UDim2.new(1, -20, 0, 30)
+searchBox.Position = UDim2.new(0, 10, 0, 140)
+searchBox.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 searchBox.BorderSizePixel = 0
-searchBox.PlaceholderText = "พิมพ์ชื่อไอเทมที่ต้องการค้นหา..."
-searchBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+searchBox.PlaceholderText = "Type item name to search..."
 searchBox.Text = ""
-searchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+searchBox.TextColor3 = Color3.new(1, 1, 1)
 searchBox.TextScaled = true
 searchBox.Font = Enum.Font.Gotham
 searchBox.Parent = mainFrame
 
 local searchCorner = Instance.new("UICorner")
-searchCorner.CornerRadius = UDim.new(0, 8)
+searchCorner.CornerRadius = UDim.new(0, 6)
 searchCorner.Parent = searchBox
 
-local searchStroke = Instance.new("UIStroke")
-searchStroke.Color = Color3.fromRGB(255, 150, 100)
-searchStroke.Thickness = 1
-searchStroke.Transparency = 0.7
-searchStroke.Parent = searchBox
-
--- ปุ่มสแกน
+-- Scan Button
 local scanBtn = Instance.new("TextButton")
-scanBtn.Size = UDim2.new(1, -20, 0, 40)
-scanBtn.Position = UDim2.new(0, 10, 0, 200)
-scanBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-scanBtn.BackgroundTransparency = 0.2
-scanBtn.Text = "🔍 สแกนหาผู้เล่น"
-scanBtn.TextColor3 = Color3.fromRGB(100, 200, 255)
+scanBtn.Size = UDim2.new(1, -20, 0, 35)
+scanBtn.Position = UDim2.new(0, 10, 0, 180)
+scanBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 200)
+scanBtn.Text = "Scan for Players"
+scanBtn.TextColor3 = Color3.new(1, 1, 1)
 scanBtn.TextScaled = true
-scanBtn.Font = Enum.Font.GothamBold
+scanBtn.Font = Enum.Font.GothamSemibold
 scanBtn.BorderSizePixel = 0
 scanBtn.Parent = mainFrame
 
 local scanCorner = Instance.new("UICorner")
-scanCorner.CornerRadius = UDim.new(0, 10)
+scanCorner.CornerRadius = UDim.new(0, 6)
 scanCorner.Parent = scanBtn
-
-local scanStroke = Instance.new("UIStroke")
-scanStroke.Color = Color3.fromRGB(100, 200, 255)
-scanStroke.Thickness = 2
-scanStroke.Transparency = 0.3
-scanStroke.Parent = scanBtn
-
--- Scan Button Gradient
-local scanGradient = Instance.new("UIGradient")
-scanGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 100, 200)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 150, 255))
-}
-scanGradient.Rotation = 45
-scanGradient.Parent = scanBtn
 
 -- Players List Frame
 local playersFrame = Instance.new("ScrollingFrame")
-playersFrame.Size = UDim2.new(1, -20, 0, 130)
-playersFrame.Position = UDim2.new(0, 10, 0, 250)
-playersFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-playersFrame.BackgroundTransparency = 0.4
+playersFrame.Size = UDim2.new(1, -20, 0, 120)
+playersFrame.Position = UDim2.new(0, 10, 0, 225)
+playersFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 playersFrame.BorderSizePixel = 0
-playersFrame.ScrollBarThickness = 6
-playersFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
+playersFrame.ScrollBarThickness = 8
 playersFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 playersFrame.Parent = mainFrame
 
 local playersCorner = Instance.new("UICorner")
-playersCorner.CornerRadius = UDim.new(0, 10)
+playersCorner.CornerRadius = UDim.new(0, 6)
 playersCorner.Parent = playersFrame
-
-local playersStroke = Instance.new("UIStroke")
-playersStroke.Color = Color3.fromRGB(100, 100, 150)
-playersStroke.Thickness = 1
-playersStroke.Transparency = 0.8
-playersStroke.Parent = playersFrame
 
 local playersLayout = Instance.new("UIListLayout")
 playersLayout.Parent = playersFrame
@@ -397,153 +235,98 @@ playersLayout.Padding = UDim.new(0, 3)
 
 -- Items List Frame
 local itemsFrame = Instance.new("ScrollingFrame")
-itemsFrame.Size = UDim2.new(1, -20, 0, 130)
-itemsFrame.Position = UDim2.new(0, 10, 0, 390)
-itemsFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-itemsFrame.BackgroundTransparency = 0.4
+itemsFrame.Size = UDim2.new(1, -20, 0, 120)
+itemsFrame.Position = UDim2.new(0, 10, 0, 355)
+itemsFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 itemsFrame.BorderSizePixel = 0
-itemsFrame.ScrollBarThickness = 6
-itemsFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 150, 100)
+itemsFrame.ScrollBarThickness = 8
 itemsFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 itemsFrame.Parent = mainFrame
 
 local itemsCorner = Instance.new("UICorner")
-itemsCorner.CornerRadius = UDim.new(0, 10)
+itemsCorner.CornerRadius = UDim.new(0, 6)
 itemsCorner.Parent = itemsFrame
-
-local itemsStroke = Instance.new("UIStroke")
-itemsStroke.Color = Color3.fromRGB(150, 100, 100)
-itemsStroke.Thickness = 1
-itemsStroke.Transparency = 0.8
-itemsStroke.Parent = itemsFrame
 
 local itemsLayout = Instance.new("UIListLayout")
 itemsLayout.Parent = itemsFrame
 itemsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 itemsLayout.Padding = UDim.new(0, 3)
 
--- ปุ่มขโมย
+-- Steal Button
 local stealBtn = Instance.new("TextButton")
-stealBtn.Size = UDim2.new(1, -20, 0, 45)
-stealBtn.Position = UDim2.new(0, 10, 0, 530)
-stealBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-stealBtn.BackgroundTransparency = 0.2
-stealBtn.Text = "💰 ขโมยไอเทม"
-stealBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+stealBtn.Size = UDim2.new(1, -20, 0, 40)
+stealBtn.Position = UDim2.new(0, 10, 0, 485)
+stealBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+stealBtn.Text = "Steal Item"
+stealBtn.TextColor3 = Color3.new(1, 1, 1)
 stealBtn.TextScaled = true
 stealBtn.Font = Enum.Font.GothamBold
 stealBtn.BorderSizePixel = 0
 stealBtn.Parent = mainFrame
 
 local stealBtnCorner = Instance.new("UICorner")
-stealBtnCorner.CornerRadius = UDim.new(0, 10)
+stealBtnCorner.CornerRadius = UDim.new(0, 6)
 stealBtnCorner.Parent = stealBtn
 
-local stealBtnStroke = Instance.new("UIStroke")
-stealBtnStroke.Color = Color3.fromRGB(255, 100, 100)
-stealBtnStroke.Thickness = 2
-stealBtnStroke.Transparency = 0.3
-stealBtnStroke.Parent = stealBtn
-
-local stealBtnGradient = Instance.new("UIGradient")
-stealBtnGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 50, 50)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 100))
-}
-stealBtnGradient.Rotation = 45
-stealBtnGradient.Parent = stealBtn
-
--- ปุ่มขโมยทั้งหมดจากผู้เล่นที่เลือก
+-- Steal All from Selected Player Button
 local stealAllSelectedBtn = Instance.new("TextButton")
-stealAllSelectedBtn.Size = UDim2.new(1, -20, 0, 45)
-stealAllSelectedBtn.Position = UDim2.new(0, 10, 0, 585)
-stealAllSelectedBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-stealAllSelectedBtn.BackgroundTransparency = 0.2
-stealAllSelectedBtn.Text = "🎯 ขโมยทั้งหมดจากคนที่เลือก"
-stealAllSelectedBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
+stealAllSelectedBtn.Size = UDim2.new(1, -20, 0, 40)
+stealAllSelectedBtn.Position = UDim2.new(0, 10, 0, 535)
+stealAllSelectedBtn.BackgroundColor3 = Color3.fromRGB(200, 120, 60)
+stealAllSelectedBtn.Text = "Steal All Items from Selected Player"
+stealAllSelectedBtn.TextColor3 = Color3.new(1, 1, 1)
 stealAllSelectedBtn.TextScaled = true
 stealAllSelectedBtn.Font = Enum.Font.GothamBold
 stealAllSelectedBtn.BorderSizePixel = 0
 stealAllSelectedBtn.Parent = mainFrame
 
 local stealAllSelectedBtnCorner = Instance.new("UICorner")
-stealAllSelectedBtnCorner.CornerRadius = UDim.new(0, 10)
+stealAllSelectedBtnCorner.CornerRadius = UDim.new(0, 6)
 stealAllSelectedBtnCorner.Parent = stealAllSelectedBtn
 
-local stealAllSelectedBtnStroke = Instance.new("UIStroke")
-stealAllSelectedBtnStroke.Color = Color3.fromRGB(255, 200, 100)
-stealAllSelectedBtnStroke.Thickness = 2
-stealAllSelectedBtnStroke.Transparency = 0.3
-stealAllSelectedBtnStroke.Parent = stealAllSelectedBtn
-
-local stealAllSelectedBtnGradient = Instance.new("UIGradient")
-stealAllSelectedBtnGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 150, 50)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 100))
-}
-stealAllSelectedBtnGradient.Rotation = 45
-stealAllSelectedBtnGradient.Parent = stealAllSelectedBtn
-
--- ปุ่มขโมยทั้งหมดจากทุกคน
+-- Steal All from Everyone Button
 local stealAllBtn = Instance.new("TextButton")
-stealAllBtn.Size = UDim2.new(1, -20, 0, 45)
-stealAllBtn.Position = UDim2.new(0, 10, 0, 640)
-stealAllBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-stealAllBtn.BackgroundTransparency = 0.2
-stealAllBtn.Text = "🌟 ขโมยจากทุกคน"
-stealAllBtn.TextColor3 = Color3.fromRGB(200, 100, 255)
+stealAllBtn.Size = UDim2.new(1, -20, 0, 40)
+stealAllBtn.Position = UDim2.new(0, 10, 0, 585)
+stealAllBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 150)
+stealAllBtn.Text = "Steal All Items from Everyone"
+stealAllBtn.TextColor3 = Color3.new(1, 1, 1)
 stealAllBtn.TextScaled = true
 stealAllBtn.Font = Enum.Font.GothamBold
 stealAllBtn.BorderSizePixel = 0
 stealAllBtn.Parent = mainFrame
 
 local stealAllBtnCorner = Instance.new("UICorner")
-stealAllBtnCorner.CornerRadius = UDim.new(0, 10)
+stealAllBtnCorner.CornerRadius = UDim.new(0, 6)
 stealAllBtnCorner.Parent = stealAllBtn
 
-local stealAllBtnStroke = Instance.new("UIStroke")
-stealAllBtnStroke.Color = Color3.fromRGB(200, 100, 255)
-stealAllBtnStroke.Thickness = 2
-stealAllBtnStroke.Transparency = 0.3
-stealAllBtnStroke.Parent = stealAllBtn
-
-local stealAllBtnGradient = Instance.new("UIGradient")
-stealAllBtnGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 50, 200)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 100, 255))
-}
-stealAllBtnGradient.Rotation = 45
-stealAllBtnGradient.Parent = stealAllBtn
-
--- ป้ายข้อความตอบกลับ
+-- Feedback Label
 local feedback = Instance.new("TextLabel")
-feedback.Size = UDim2.new(1, -20, 0, 20)
-feedback.Position = UDim2.new(0, 10, 0, 690)
+feedback.Size = UDim2.new(1, -20, 0, 35)
+feedback.Position = UDim2.new(0, 10, 0, 635)
 feedback.BackgroundTransparency = 1
-feedback.Text = "คลิกสแกนเพื่อหาผู้เล่นที่อยู่ใกล้"
-feedback.TextColor3 = Color3.fromRGB(255, 255, 100)
+feedback.Text = "Click scan to find nearby players"
+feedback.TextColor3 = Color3.fromRGB(255, 220, 100)
 feedback.TextScaled = true
-feedback.Font = Enum.Font.GothamSemibold
+feedback.Font = Enum.Font.Gotham
 feedback.TextWrapped = true
-feedback.TextStrokeTransparency = 0.8
-feedback.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 feedback.Parent = mainFrame
 
-print("สร้างองค์ประกอบ UI ทั้งหมดแล้ว")
+print("All UI elements created")
 
--- ฟังก์ชันคำนวณระยะทาง
+-- Distance calculation function
 local function getDistance(pos1, pos2)
     return (pos1 - pos2).Magnitude
 end
 
--- ฟังก์ชันสแกนผู้เล่นที่อยู่ใกล้
+-- Scan nearby players function
 local function scanNearbyPlayers()
-    print("กำลังสแกนหาผู้เล่น...")
+    print("Scanning for players...")
     
-    -- อัปเดตการอ้างอิงตัวละคร
+    -- Update character reference
     char = player.Character
     
-    -- ล้างรายการเก่า
+    -- Clear old list
     for _, child in ipairs(playersFrame:GetChildren()) do
         if child:IsA("TextButton") then 
             child:Destroy() 
@@ -559,16 +342,16 @@ local function scanNearbyPlayers()
     nearbyPlayers = {}
     local scanRange = tonumber(rangeSlider.Text) or 50
     scanRange = math.clamp(scanRange, 10, 200)
-    rangeLabel.Text = "ระยะสแกน: " .. scanRange .. " หน่วย"
+    rangeLabel.Text = "Scan Range: " .. scanRange .. " units"
     
     if not char or not char:FindFirstChild("HumanoidRootPart") then
-        feedback.Text = "ไม่พบตัวละครของคุณ"
+        feedback.Text = "Your character not found"
         return
     end
     
     local myPos = char.HumanoidRootPart.Position
     
-    -- หาผู้เล่นที่อยู่ใกล้
+    -- Find nearby players
     for _, otherPlayer in ipairs(Players:GetPlayers()) do
         if otherPlayer ~= player and otherPlayer.Character then
             local otherChar = otherPlayer.Character
@@ -588,81 +371,68 @@ local function scanNearbyPlayers()
         end
     end
     
-    print("พบผู้เล่นที่อยู่ใกล้:", #nearbyPlayers, "คน")
+    print("Found nearby players:", #nearbyPlayers, "players")
     
     if #nearbyPlayers == 0 then
-        feedback.Text = "ไม่พบผู้เล่นในระยะ " .. scanRange .. " หน่วย"
+        feedback.Text = "No players found within " .. scanRange .. " units"
         return
     end
     
-    -- เรียงตามระยะทาง
+    -- Sort by distance
     table.sort(nearbyPlayers, function(a, b) return a.distance < b.distance end)
     
-    -- สร้างปุ่มสำหรับแต่ละผู้เล่น
+    -- Create buttons for each player
     for i, playerData in ipairs(nearbyPlayers) do
         local btn = Instance.new("TextButton")
         btn.Parent = playersFrame
         btn.LayoutOrder = i
-        btn.Size = UDim2.new(1, -10, 0, 40)
+        btn.Size = UDim2.new(1, -10, 0, 35)
         btn.Position = UDim2.new(0, 5, 0, 0)
-        btn.Text = "👤 " .. playerData.player.Name .. " (" .. math.floor(playerData.distance) .. "ม.)"
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Text = playerData.player.Name .. " (" .. math.floor(playerData.distance) .. "m)"
+        btn.TextColor3 = Color3.new(1, 1, 1)
         btn.TextScaled = true
         btn.Font = Enum.Font.GothamSemibold
-        btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        btn.BackgroundTransparency = 0.3
+        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
         btn.BorderSizePixel = 0
         
         local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(0, 8)
+        btnCorner.CornerRadius = UDim.new(0, 4)
         btnCorner.Parent = btn
-        
-        local btnStroke = Instance.new("UIStroke")
-        btnStroke.Color = Color3.fromRGB(100, 150, 255)
-        btnStroke.Thickness = 1
-        btnStroke.Transparency = 0.7
-        btnStroke.Parent = btn
         
         btn.MouseButton1Click:Connect(function()
             selectedPlayer = playerData
-            print("เลือกผู้เล่น:", playerData.player.Name)
+            print("Selected player:", playerData.player.Name)
             
-            -- รีเซ็ตสีปุ่มทั้งหมด
+            -- Reset all button colors
             for _, c in ipairs(playersFrame:GetChildren()) do
                 if c:IsA("TextButton") then 
-                    c.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-                    c.BackgroundTransparency = 0.3
-                    c:FindFirstChild("UIStroke").Color = Color3.fromRGB(100, 150, 255)
-                    c:FindFirstChild("UIStroke").Transparency = 0.7
+                    c.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
                 end
             end
             
-            -- เปลี่ยนสีปุ่มที่เลือก
-            btn.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-            btn.BackgroundTransparency = 0.1
-            btnStroke.Color = Color3.fromRGB(150, 220, 255)
-            btnStroke.Transparency = 0.3
+            -- Change selected button color
+            btn.BackgroundColor3 = Color3.fromRGB(70, 130, 200)
             
-            -- แสดงไอเทมของผู้เล่นที่เลือก
+            -- Show items of selected player
             showPlayerItems(playerData)
         end)
     end
     
-    -- อัปเดตขนาด Canvas
+    -- Update Canvas Size
     playersFrame.CanvasSize = UDim2.new(0, 0, 0, playersLayout.AbsoluteContentSize.Y + 10)
-    feedback.Text = "พบผู้เล่น: " .. #nearbyPlayers .. " คน"
+    feedback.Text = "Found players: " .. #nearbyPlayers .. " players"
 end
 
--- ฟังก์ชันแสดงไอเทมของผู้เล่น
+-- Show player items function
 local function showPlayerItems(playerData)
-    print("กำลังดูไอเทมของ:", playerData.player.Name)
+    print("Viewing items of:", playerData.player.Name)
     
-    -- อัปเดตการอ้างอิงตัวละครเพื่อรับข้อมูลล่าสุด
+    -- Update character reference to get latest data
     if playerData.player == player then
         playerData.character = player.Character
     end
     
-    -- ล้างรายการไอเทมเก่า
+    -- Clear old item list
     for _, child in ipairs(itemsFrame:GetChildren()) do
         if child:IsA("TextButton") then 
             child:Destroy() 
@@ -672,107 +442,93 @@ local function showPlayerItems(playerData)
     local items = {}
     local searchTerm = searchBox.Text:lower()
     
-    -- หาไอเทมจาก Backpack
+    -- Find items from Backpack
     if playerData.player.Backpack then
         for _, tool in ipairs(playerData.player.Backpack:GetChildren()) do
             if tool:IsA("Tool") then
                 local toolName = tool.Name:lower()
                 if searchTerm == "" or toolName:find(searchTerm) then
-                    table.insert(items, {tool = tool, location = "กระเป๋า"})
+                    table.insert(items, {tool = tool, location = "Backpack"})
                 end
             end
         end
     end
     
-    -- หาไอเทมที่กำลังถือ - อัปเดตการอ้างอิงตัวละคร
+    -- Find items being held - Update character reference
     local currentChar = playerData.player.Character
     if currentChar then
         for _, tool in ipairs(currentChar:GetChildren()) do
             if tool:IsA("Tool") then
                 local toolName = tool.Name:lower()
                 if searchTerm == "" or toolName:find(searchTerm) then
-                    table.insert(items, {tool = tool, location = "มือ"})
+                    table.insert(items, {tool = tool, location = "Hand"})
                 end
             end
         end
     end
     
-    print("พบไอเทมของ", playerData.player.Name .. ":", #items, "ชิ้น")
+    print("Found items of", playerData.player.Name .. ":", #items, "items")
     
     if #items == 0 then
         if searchTerm ~= "" then
-            feedback.Text = "ไม่พบไอเทมที่ตรงกับ '" .. searchBox.Text .. "' สำหรับ " .. playerData.player.Name
+            feedback.Text = "No items matching '" .. searchBox.Text .. "' found for " .. playerData.player.Name
         else
-            feedback.Text = playerData.player.Name .. " ไม่มีไอเทม"
+            feedback.Text = playerData.player.Name .. " has no items"
         end
         return
     end
     
-    -- สร้างปุ่มสำหรับแต่ละไอเทม
+    -- Create buttons for each item
     for i, itemData in ipairs(items) do
         local btn = Instance.new("TextButton")
         btn.Parent = itemsFrame
         btn.LayoutOrder = i
-        btn.Size = UDim2.new(1, -10, 0, 40)
+        btn.Size = UDim2.new(1, -10, 0, 35)
         btn.Position = UDim2.new(0, 5, 0, 0)
-        local locationIcon = itemData.location == "มือ" and "✋" or "🎒"
-        btn.Text = locationIcon .. " " .. itemData.tool.Name .. " (" .. itemData.location .. ")"
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Text = itemData.tool.Name .. " (" .. itemData.location .. ")"
+        btn.TextColor3 = Color3.new(1, 1, 1)
         btn.TextScaled = true
         btn.Font = Enum.Font.GothamSemibold
-        btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        btn.BackgroundTransparency = 0.3
+        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
         btn.BorderSizePixel = 0
         
         local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(0, 8)
+        btnCorner.CornerRadius = UDim.new(0, 4)
         btnCorner.Parent = btn
-        
-        local btnStroke = Instance.new("UIStroke")
-        btnStroke.Color = Color3.fromRGB(255, 150, 100)
-        btnStroke.Thickness = 1
-        btnStroke.Transparency = 0.7
-        btnStroke.Parent = btn
         
         btn.MouseButton1Click:Connect(function()
             selectedTool = itemData
-            print("เลือกไอเทม:", itemData.tool.Name)
+            print("Selected item:", itemData.tool.Name)
             
-            -- รีเซ็ตสีปุ่มทั้งหมด
+            -- Reset all button colors
             for _, c in ipairs(itemsFrame:GetChildren()) do
                 if c:IsA("TextButton") then 
-                    c.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-                    c.BackgroundTransparency = 0.3
-                    c:FindFirstChild("UIStroke").Color = Color3.fromRGB(255, 150, 100)
-                    c:FindFirstChild("UIStroke").Transparency = 0.7
+                    c.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
                 end
             end
             
-            -- เปลี่ยนสีปุ่มที่เลือก
-            btn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-            btn.BackgroundTransparency = 0.1
-            btnStroke.Color = Color3.fromRGB(255, 150, 150)
-            btnStroke.Transparency = 0.3
-            feedback.Text = "เลือก: " .. itemData.tool.Name .. " จาก " .. playerData.player.Name
+            -- Change selected button color
+            btn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+            feedback.Text = "Selected: " .. itemData.tool.Name .. " from " .. playerData.player.Name
         end)
     end
     
-    -- อัปเดตขนาด Canvas
+    -- Update Canvas Size
     itemsFrame.CanvasSize = UDim2.new(0, 0, 0, itemsLayout.AbsoluteContentSize.Y + 10)
-    feedback.Text = playerData.player.Name .. " มีไอเทม: " .. #items .. " ชิ้น"
+    feedback.Text = playerData.player.Name .. " has items: " .. #items .. " items"
 end
 
--- ค้นหาไอเทมเฉพาะจากผู้เล่นทั้งหมด
+-- Search for specific item across all players
 local function searchForItem()
     local searchTerm = searchBox.Text:lower()
     if searchTerm == "" then
-        feedback.Text = "กรุณาใส่ชื่อไอเทมที่ต้องการค้นหา"
+        feedback.Text = "Please enter an item name to search"
         return
     end
     
-    print("กำลังค้นหาไอเทม:", searchBox.Text)
+    print("Searching for item:", searchBox.Text)
     
-    -- ล้างรายการเก่า
+    -- Clear old lists
     for _, child in ipairs(playersFrame:GetChildren()) do
         if child:IsA("TextButton") then 
             child:Destroy() 
@@ -789,24 +545,24 @@ local function searchForItem()
     local scanRange = tonumber(rangeSlider.Text) or 50
     scanRange = math.clamp(scanRange, 10, 200)
     
-    -- อัปเดตการอ้างอิงตัวละคร
+    -- Update character reference
     char = player.Character
     
     if not char or not char:FindFirstChild("HumanoidRootPart") then
-        feedback.Text = "ไม่พบตัวละครของคุณ"
+        feedback.Text = "Your character not found"
         return
     end
     
     local myPos = char.HumanoidRootPart.Position
     
-    -- ค้นหาผ่านผู้เล่นทั้งหมด
+    -- Search through all players
     for _, otherPlayer in ipairs(Players:GetPlayers()) do
         if otherPlayer.Character then
             local otherChar = otherPlayer.Character
             local otherRoot = otherChar:FindFirstChild("HumanoidRootPart")
             local distance = otherRoot and getDistance(myPos, otherRoot.Position) or math.huge
             
-            -- ค้นหาใน Backpack
+            -- Search in Backpack
             if otherPlayer.Backpack then
                 for _, tool in ipairs(otherPlayer.Backpack:GetChildren()) do
                     if tool:IsA("Tool") then
@@ -815,7 +571,7 @@ local function searchForItem()
                             table.insert(foundItems, {
                                 tool = tool,
                                 player = otherPlayer,
-                                location = "กระเป๋า",
+                                location = "Backpack",
                                 distance = distance,
                                 character = otherChar
                             })
@@ -824,7 +580,7 @@ local function searchForItem()
                 end
             end
             
-            -- ค้นหาในมือ
+            -- Search in Hand
             for _, tool in ipairs(otherChar:GetChildren()) do
                 if tool:IsA("Tool") then
                     local toolName = tool.Name:lower()
@@ -832,7 +588,7 @@ local function searchForItem()
                         table.insert(foundItems, {
                             tool = tool,
                             player = otherPlayer,
-                            location = "มือ",
+                            location = "Hand",
                             distance = distance,
                             character = otherChar
                         })
@@ -842,43 +598,35 @@ local function searchForItem()
         end
     end
     
-    print("พบ", #foundItems, "ไอเทมที่ตรงกับ:", searchBox.Text)
+    print("Found", #foundItems, "items matching:", searchBox.Text)
     
     if #foundItems == 0 then
-        feedback.Text = "ไม่พบไอเทมที่ตรงกับ '" .. searchBox.Text .. "'"
+        feedback.Text = "No items matching '" .. searchBox.Text .. "' found"
         return
     end
     
-    -- เรียงตามระยะทาง
+    -- Sort by distance
     table.sort(foundItems, function(a, b) return a.distance < b.distance end)
     
-    -- สร้างปุ่มสำหรับไอเทมที่พบ
+    -- Create buttons for found items
     for i, itemData in ipairs(foundItems) do
         local btn = Instance.new("TextButton")
         btn.Parent = itemsFrame
         btn.LayoutOrder = i
-        btn.Size = UDim2.new(1, -10, 0, 40)
+        btn.Size = UDim2.new(1, -10, 0, 35)
         btn.Position = UDim2.new(0, 5, 0, 0)
         
-        local distanceText = itemData.distance < math.huge and (" [" .. math.floor(itemData.distance) .. "ม.]") or " [ไกล]"
-        local locationIcon = itemData.location == "มือ" and "✋" or "🎒"
-        btn.Text = locationIcon .. " " .. itemData.tool.Name .. " - " .. itemData.player.Name .. distanceText
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        local distanceText = itemData.distance < math.huge and (" [" .. math.floor(itemData.distance) .. "m]") or " [Far]"
+        btn.Text = itemData.tool.Name .. " (" .. itemData.location .. ") - " .. itemData.player.Name .. distanceText
+        btn.TextColor3 = Color3.new(1, 1, 1)
         btn.TextScaled = true
         btn.Font = Enum.Font.GothamSemibold
-        btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        btn.BackgroundTransparency = 0.3
+        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
         btn.BorderSizePixel = 0
         
         local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(0, 8)
+        btnCorner.CornerRadius = UDim.new(0, 4)
         btnCorner.Parent = btn
-        
-        local btnStroke = Instance.new("UIStroke")
-        btnStroke.Color = Color3.fromRGB(255, 150, 100)
-        btnStroke.Thickness = 1
-        btnStroke.Transparency = 0.7
-        btnStroke.Parent = btn
         
         btn.MouseButton1Click:Connect(function()
             selectedTool = itemData
@@ -887,87 +635,77 @@ local function searchForItem()
                 distance = itemData.distance,
                 character = itemData.character
             }
-            print("เลือกไอเทม:", itemData.tool.Name, "จาก", itemData.player.Name)
+            print("Selected item:", itemData.tool.Name, "from", itemData.player.Name)
             
-            -- รีเซ็ตสีปุ่มทั้งหมด
+            -- Reset all button colors
             for _, c in ipairs(itemsFrame:GetChildren()) do
                 if c:IsA("TextButton") then 
-                    c.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-                    c.BackgroundTransparency = 0.3
-                    if c:FindFirstChild("UIStroke") then
-                        c:FindFirstChild("UIStroke").Color = Color3.fromRGB(255, 150, 100)
-                        c:FindFirstChild("UIStroke").Transparency = 0.7
-                    end
+                    c.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
                 end
             end
             
-            -- เปลี่ยนสีปุ่มที่เลือก
-            btn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-            btn.BackgroundTransparency = 0.1
-            if btnStroke then
-                btnStroke.Color = Color3.fromRGB(255, 150, 150)
-                btnStroke.Transparency = 0.3
-            end
-            feedback.Text = "เลือก: " .. itemData.tool.Name .. " จาก " .. itemData.player.Name
+            -- Change selected button color
+            btn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+            feedback.Text = "Selected: " .. itemData.tool.Name .. " from " .. itemData.player.Name
         end)
     end
     
-    -- อัปเดตขนาด Canvas
+    -- Update Canvas Size
     itemsFrame.CanvasSize = UDim2.new(0, 0, 0, itemsLayout.AbsoluteContentSize.Y + 10)
-    feedback.Text = "พบ " .. #foundItems .. " ไอเทมที่ตรงกับ '" .. searchBox.Text .. "'"
+    feedback.Text = "Found " .. #foundItems .. " items matching '" .. searchBox.Text .. "'"
 end
 
--- ฟังก์ชันขโมยไอเทม
+-- Steal item function
 local function stealItem()
-    print("เริ่มการขโมย...")
+    print("Starting theft...")
     
     if not selectedPlayer then
-        feedback.Text = "กรุณาเลือกผู้เล่นก่อน"
+        feedback.Text = "Please select a player first"
         return
     end
     
     if not selectedTool then
-        feedback.Text = "กรุณาเลือกไอเทมก่อน"
+        feedback.Text = "Please select an item first"
         return
     end
     
     local targetTool = selectedTool.tool
     
     if not targetTool or not targetTool.Parent then
-        feedback.Text = "ไอเทมหายไป"
+        feedback.Text = "Item is gone"
         return
     end
     
-    print("กำลังขโมย:", targetTool.Name, "จาก", selectedPlayer.player.Name)
+    print("Stealing:", targetTool.Name, "from", selectedPlayer.player.Name)
     
-    -- ลองขโมยด้วยวิธีการต่างๆ
+    -- Try stealing with different methods
     local success = false
     
-    -- วิธีที่ 1: Copy และย้าย
+    -- Method 1: Clone and move
     pcall(function()
         local clonedTool = targetTool:Clone()
         clonedTool.Parent = backpack
         success = true
-        print("ขโมยสำเร็จโดยใช้วิธี Clone")
+        print("Successful theft using Clone method")
     end)
     
-    -- วิธีที่ 2: เปลี่ยน Parent โดยตรง
+    -- Method 2: Direct parent change
     if not success then
         pcall(function()
             targetTool.Parent = backpack
             success = true
-            print("ขโมยสำเร็จโดยใช้วิธี Parent Change")
+            print("Successful theft using Parent Change method")
         end)
     end
     
-    -- วิธีที่ 3: ใช้ FireServer (สำหรับเกมที่มี RemoteEvent)
+    -- Method 3: Use FireServer (for games with RemoteEvent)
     if not success then
         pcall(function()
             for _, obj in ipairs(game:GetDescendants()) do
                 if obj:IsA("RemoteEvent") and obj.Name:lower():find("tool") or obj.Name:lower():find("item") then
                     obj:FireServer("give", targetTool.Name, player)
                     success = true
-                    print("ส่งคำขอผ่าน RemoteEvent:", obj.Name)
+                    print("Request sent via RemoteEvent:", obj.Name)
                     break
                 end
             end
@@ -975,43 +713,43 @@ local function stealItem()
     end
     
     if success then
-        feedback.Text = ("ขโมย \"%s\" จาก %s สำเร็จ!"):format(targetTool.Name, selectedPlayer.player.Name)
+        feedback.Text = ("Stole \"%s\" from %s successfully!"):format(targetTool.Name, selectedPlayer.player.Name)
         
-        -- บังคับให้ใส่ไอเทมที่ขโมยมาเพื่อให้เห็น
+        -- Force equip the stolen item to make it visible
         pcall(function()
             if humanoid and targetTool.Parent == backpack then
                 humanoid:EquipTool(targetTool)
-                print("ใส่ไอเทมที่ขโมยมา:", targetTool.Name)
+                print("Equipped stolen item:", targetTool.Name)
             end
         end)
         
-        -- อัปเดตรายการอัตโนมัติ
+        -- Auto update list
         task.wait(0.5)
         if selectedPlayer then
             showPlayerItems(selectedPlayer)
         end
     else
-        feedback.Text = "ไม่สามารถขโมยได้ - เซิร์ฟเวอร์มีการป้องกัน"
+        feedback.Text = "Cannot steal - server has protection"
     end
 end
 
--- ฟังก์ชันขโมยไอเทมทั้งหมดจากผู้เล่นที่เลือก
+-- Steal all items from selected player function
 local function stealAllFromSelectedPlayer()
     if not selectedPlayer then
-        feedback.Text = "กรุณาเลือกผู้เล่นก่อน"
+        feedback.Text = "Please select a player first"
         return
     end
     
-    print("เริ่มขโมยจากผู้เล่นที่เลือก:", selectedPlayer.player.Name)
-    feedback.Text = "กำลังขโมยไอเทมทั้งหมดจาก " .. selectedPlayer.player.Name .. "..."
+    print("Starting theft from selected player:", selectedPlayer.player.Name)
+    feedback.Text = "Stealing all items from " .. selectedPlayer.player.Name .. "..."
     
     local totalStolen = 0
     local targetPlayer = selectedPlayer.player
     
-    -- อัปเดตการอ้างอิงตัวละคร
+    -- Update character reference
     selectedPlayer.character = targetPlayer.Character
     
-    -- ขโมยจาก Backpack
+    -- Steal from Backpack
     if targetPlayer.Backpack then
         for _, tool in ipairs(targetPlayer.Backpack:GetChildren()) do
             if tool:IsA("Tool") then
@@ -1019,24 +757,24 @@ local function stealAllFromSelectedPlayer()
                     local clonedTool = tool:Clone()
                     clonedTool.Parent = backpack
                     totalStolen = totalStolen + 1
-                    print("ขโมย:", tool.Name, "จาก", targetPlayer.Name, "(กระเป๋า)")
+                    print("Stole:", tool.Name, "from", targetPlayer.Name, "(Backpack)")
                 end)
                 
-                -- ลองย้ายโดยตรงหากคัดลอกไม่ได้
+                -- Try direct move if clone failed
                 if tool.Parent then
                     pcall(function()
                         tool.Parent = backpack
                         totalStolen = totalStolen + 1
-                        print("ย้าย:", tool.Name, "จาก", targetPlayer.Name, "(กระเป๋า)")
+                        print("Moved:", tool.Name, "from", targetPlayer.Name, "(Backpack)")
                     end)
                 end
                 
-                task.wait(0.01) -- หน่วงเวลาเล็กน้อยเพื่อป้องกัน lag
+                task.wait(0.01) -- Small delay to prevent lag
             end
         end
     end
     
-    -- ขโมยจากมือ
+    -- Steal from Hand
     if selectedPlayer.character then
         for _, tool in ipairs(selectedPlayer.character:GetChildren()) do
             if tool:IsA("Tool") then
@@ -1044,80 +782,80 @@ local function stealAllFromSelectedPlayer()
                     local clonedTool = tool:Clone()
                     clonedTool.Parent = backpack
                     totalStolen = totalStolen + 1
-                    print("ขโมย:", tool.Name, "จาก", targetPlayer.Name, "(มือ)")
+                    print("Stole:", tool.Name, "from", targetPlayer.Name, "(Hand)")
                 end)
                 
-                -- ลองย้ายโดยตรงหากคัดลอกไม่ได้
+                -- Try direct move if clone failed
                 if tool.Parent then
                     pcall(function()
                         tool.Parent = backpack
                         totalStolen = totalStolen + 1
-                        print("ย้าย:", tool.Name, "จาก", targetPlayer.Name, "(มือ)")
+                        print("Moved:", tool.Name, "from", targetPlayer.Name, "(Hand)")
                     end)
                 end
                 
-                task.wait(0.01) -- หน่วงเวลาเล็กน้อยเพื่อป้องกัน lag
+                task.wait(0.01) -- Small delay to prevent lag
             end
         end
     end
     
-    feedback.Text = ("ขโมย %d ไอเทมจาก %s สำเร็จ!"):format(totalStolen, targetPlayer.Name)
-    print("การขโมยจาก", targetPlayer.Name, "เสร็จสิ้น! รวมไอเทมที่ขโมย:", totalStolen)
+    feedback.Text = ("Stole %d items from %s successfully!"):format(totalStolen, targetPlayer.Name)
+    print("Theft from", targetPlayer.Name, "finished! Total items stolen:", totalStolen)
     
-    -- ใส่ไอเทมที่ขโมยมาล่าสุดเพื่อให้เห็น
+    -- Auto equip last stolen item to make it visible
     if totalStolen > 0 then
         pcall(function()
             for _, tool in ipairs(backpack:GetChildren()) do
                 if tool:IsA("Tool") and humanoid then
                     humanoid:EquipTool(tool)
-                    print("ใส่ไอเทม:", tool.Name)
+                    print("Equipped item:", tool.Name)
                     break
                 end
             end
         end)
     end
     
-    -- อัปเดตรายการอัตโนมัติ
+    -- Auto update list
     task.wait(0.5)
     showPlayerItems(selectedPlayer)
 end
 
--- ฟังก์ชันขโมยไอเทมทั้งหมดจากทุกคน
+-- Steal all items from everyone function
 local function stealAllItems()
-    print("เริ่มการขโมยจำนวนมาก...")
-    feedback.Text = "กำลังขโมยไอเทมทั้งหมดจากทุกคน..."
+    print("Starting mass theft...")
+    feedback.Text = "Stealing all items from everyone..."
     
     local totalStolen = 0
     local scanRange = tonumber(rangeSlider.Text) or 50
     scanRange = math.clamp(scanRange, 10, 200)
     
-    -- อัปเดตการอ้างอิงตัวละคร
+    -- Update character reference
     char = player.Character
     
     if not char or not char:FindFirstChild("HumanoidRootPart") then
-        feedback.Text = "ไม่พบตัวละครของคุณ"
+        feedback.Text = "Your character not found"
         return
     end
     
     local myPos = char.HumanoidRootPart.Position
     
-    -- ไปทุกผู้เล่น
+    -- Go through all players
     for _, otherPlayer in ipairs(Players:GetPlayers()) do
         if otherPlayer ~= player then
             local distance = math.huge
             
-            -- คำนวณระยะทางหากผู้เล่นมีตัวละคร
+            -- Calculate distance if player has character
             if otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 distance = getDistance(myPos, otherPlayer.Character.HumanoidRootPart.Position)
             end
             
-            -- ข้ามหากอยู่ไกลเกินไป (เว้นแต่เราต้องการขโมยจากทุกคนไม่ว่าระยะทาง)
-            -- ลบคอมเม้นต์ 3 บรรทัดถัดไปหากต้องการขโมยจากผู้เล่นทั้งหมดไม่ว่าระยะทาง
-            if distance > scanRange * 2 then -- ใช้ระยะสแกน 2 เท่าสำหรับการขโมยจำนวนมาก
+            -- Skip if too far (unless we want to steal from everyone regardless of distance)
+            -- Comment out the next 3 lines if you want to steal from ALL players regardless of distance
+            if distance > scanRange * 2 then -- Use 2x scan range for mass theft
                 continue
             end
             
-            -- ขโมยจาก Backpack
+            -- Steal from Backpack
             if otherPlayer.Backpack then
                 for _, tool in ipairs(otherPlayer.Backpack:GetChildren()) do
                     if tool:IsA("Tool") then
@@ -1125,24 +863,24 @@ local function stealAllItems()
                             local clonedTool = tool:Clone()
                             clonedTool.Parent = backpack
                             totalStolen = totalStolen + 1
-                            print("ขโมย:", tool.Name, "จาก", otherPlayer.Name, "(กระเป๋า)")
+                            print("Stole:", tool.Name, "from", otherPlayer.Name, "(Backpack)")
                         end)
                         
-                        -- ลองย้ายโดยตรงหากคัดลอกไม่ได้
+                        -- Try direct move if clone failed
                         if tool.Parent then
                             pcall(function()
                                 tool.Parent = backpack
                                 totalStolen = totalStolen + 1
-                                print("ย้าย:", tool.Name, "จาก", otherPlayer.Name, "(กระเป๋า)")
+                                print("Moved:", tool.Name, "from", otherPlayer.Name, "(Backpack)")
                             end)
                         end
                         
-                        task.wait(0.01) -- หน่วงเวลาเล็กน้อยเพื่อป้องกัน lag
+                        task.wait(0.01) -- Small delay to prevent lag
                     end
                 end
             end
             
-            -- ขโมยจากมือ
+            -- Steal from Hand
             if otherPlayer.Character then
                 for _, tool in ipairs(otherPlayer.Character:GetChildren()) do
                     if tool:IsA("Tool") then
@@ -1150,35 +888,35 @@ local function stealAllItems()
                             local clonedTool = tool:Clone()
                             clonedTool.Parent = backpack
                             totalStolen = totalStolen + 1
-                            print("ขโมย:", tool.Name, "จาก", otherPlayer.Name, "(มือ)")
+                            print("Stole:", tool.Name, "from", otherPlayer.Name, "(Hand)")
                         end)
                         
-                        -- ลองย้ายโดยตรงหากคัดลอกไม่ได้
+                        -- Try direct move if clone failed
                         if tool.Parent then
                             pcall(function()
                                 tool.Parent = backpack
                                 totalStolen = totalStolen + 1
-                                print("ย้าย:", tool.Name, "จาก", otherPlayer.Name, "(มือ)")
+                                print("Moved:", tool.Name, "from", otherPlayer.Name, "(Hand)")
                             end)
                         end
                         
-                        task.wait(0.01) -- หน่วงเวลาเล็กน้อยเพื่อป้องกัน lag
+                        task.wait(0.01) -- Small delay to prevent lag
                     end
                 end
             end
         end
     end
     
-    feedback.Text = ("การขโมยจำนวนมากเสร็จสิ้น! ขโมยรวม %d ไอเทม"):format(totalStolen)
-    print("การขโมยจำนวนมากเสร็จสิ้น! รวมไอเทมที่ขโมย:", totalStolen)
+    feedback.Text = ("Mass theft complete! Stole %d items total"):format(totalStolen)
+    print("Mass theft finished! Total items stolen:", totalStolen)
     
-    -- ใส่ไอเทมที่ขโมยมาล่าสุดเพื่อให้เห็น
+    -- Auto equip last stolen item to make it visible
     if totalStolen > 0 then
         pcall(function()
             for _, tool in ipairs(backpack:GetChildren()) do
                 if tool:IsA("Tool") and humanoid then
                     humanoid:EquipTool(tool)
-                    print("ใส่ไอเทม:", tool.Name)
+                    print("Equipped item:", tool.Name)
                     break
                 end
             end
@@ -1186,129 +924,85 @@ local function stealAllItems()
     end
 end
 
--- เชื่อมต่อ events
+-- Connect events
 scanBtn.MouseButton1Click:Connect(function()
-    -- เอฟเฟกต์ปุ่มด้วยแอนิเมชันทันสมัย
-    local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-    local pressTween = TweenService:Create(scanBtn, tweenInfo, {
-        BackgroundTransparency = 0.1,
-        Size = UDim2.new(1, -25, 0, 38)
-    })
-    pressTween:Play()
-    
-    pressTween.Completed:Connect(function()
-        local releaseTween = TweenService:Create(scanBtn, tweenInfo, {
-            BackgroundTransparency = 0.2,
-            Size = UDim2.new(1, -20, 0, 40)
-        })
-        releaseTween:Play()
-    end)
+    -- Button effect
+    scanBtn.BackgroundColor3 = Color3.fromRGB(50, 100, 150)
+    task.wait(0.1)
+    scanBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 200)
     
     scanNearbyPlayers()
 end)
 
 stealBtn.MouseButton1Click:Connect(function()
-    -- เอฟเฟกต์ปุ่มด้วยแอนิเมชันทันสมัย
-    local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-    local pressTween = TweenService:Create(stealBtn, tweenInfo, {
-        BackgroundTransparency = 0.1,
-        Size = UDim2.new(1, -25, 0, 43)
-    })
-    pressTween:Play()
-    
-    pressTween.Completed:Connect(function()
-        local releaseTween = TweenService:Create(stealBtn, tweenInfo, {
-            BackgroundTransparency = 0.2,
-            Size = UDim2.new(1, -20, 0, 45)
-        })
-        releaseTween:Play()
-    end)
+    -- Button effect
+    stealBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+    task.wait(0.1)
+    stealBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
     
     stealItem()
 end)
 
 stealAllSelectedBtn.MouseButton1Click:Connect(function()
-    -- เอฟเฟกต์ปุ่มด้วยแอนิเมชันทันสมัย
-    local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-    local pressTween = TweenService:Create(stealAllSelectedBtn, tweenInfo, {
-        BackgroundTransparency = 0.1,
-        Size = UDim2.new(1, -25, 0, 43)
-    })
-    pressTween:Play()
-    
-    pressTween.Completed:Connect(function()
-        local releaseTween = TweenService:Create(stealAllSelectedBtn, tweenInfo, {
-            BackgroundTransparency = 0.2,
-            Size = UDim2.new(1, -20, 0, 45)
-        })
-        releaseTween:Play()
-    end)
+    -- Button effect
+    stealAllSelectedBtn.BackgroundColor3 = Color3.fromRGB(160, 90, 40)
+    task.wait(0.1)
+    stealAllSelectedBtn.BackgroundColor3 = Color3.fromRGB(200, 120, 60)
     
     stealAllFromSelectedPlayer()
 end)
 
 stealAllBtn.MouseButton1Click:Connect(function()
-    -- เอฟเฟกต์ปุ่มด้วยแอนิเมชันทันสมัย
-    local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-    local pressTween = TweenService:Create(stealAllBtn, tweenInfo, {
-        BackgroundTransparency = 0.1,
-        Size = UDim2.new(1, -25, 0, 43)
-    })
-    pressTween:Play()
-    
-    pressTween.Completed:Connect(function()
-        local releaseTween = TweenService:Create(stealAllBtn, tweenInfo, {
-            BackgroundTransparency = 0.2,
-            Size = UDim2.new(1, -20, 0, 45)
-        })
-        releaseTween:Play()
-    end)
+    -- Button effect
+    stealAllBtn.BackgroundColor3 = Color3.fromRGB(100, 20, 100)
+    task.wait(0.1)
+    stealAllBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 150)
     
     stealAllItems()
 end)
 
--- ค้นหาเมื่อพิมพ์ในกล่องค้นหา
+-- Search when typing in search box
 searchBox.Changed:Connect(function(property)
     if property == "Text" then
         if searchBox.Text ~= "" then
             searchForItem()
         else
-            -- ล้างผลการค้นหาเมื่อกล่องค้นหาว่าง
+            -- Clear search results when search box is empty
             for _, child in ipairs(itemsFrame:GetChildren()) do
                 if child:IsA("TextButton") then 
                     child:Destroy() 
                 end
             end
             itemsFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-            feedback.Text = "พิมพ์ชื่อไอเทมเพื่อค้นหาจากผู้เล่นทั้งหมด"
+            feedback.Text = "Type item name to search across all players"
         end
     end
 end)
 
--- ค้นหาอัตโนมัติเมื่อกด Enter
+-- Auto-search when Enter is pressed
 searchBox.FocusLost:Connect(function(enterPressed)
     if enterPressed and searchBox.Text ~= "" then
         searchForItem()
     end
 end)
 
--- อัปเดตการอ้างอิงตัวละครด้วยตนเอง (ปุ่มลัด)
+-- Update character references manually (hotkey)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.R then
-        -- อัปเดตการอ้างอิงทั้งหมดเมื่อกด R
+        -- Update all references when pressing R
         char = player.Character
         if char then
             humanoid = char:FindFirstChild("Humanoid")
             backpack = player:WaitForChild("Backpack")
-            feedback.Text = "อัปเดตการอ้างอิงตัวละครแล้ว! (กด R เพื่อรีเฟรช)"
-            print("การอัปเดตตัวละครด้วยตนเองเสร็จสิ้น")
+            feedback.Text = "Character references updated! (Press R to refresh)"
+            print("Manual character update completed")
         else
-            feedback.Text = "ไม่พบตัวละคร!"
+            feedback.Text = "Character not found!"
         end
     end
 end)
 
--- จำกัดตัวเลขในกล่องระยะสแกน
+-- Limit numbers in scan range box
 rangeSlider.FocusLost:Connect(function()
     local num = tonumber(rangeSlider.Text)
     if not num or num < 10 then
@@ -1318,19 +1012,19 @@ rangeSlider.FocusLost:Connect(function()
     else
         rangeSlider.Text = tostring(math.floor(num))
     end
-    rangeLabel.Text = "ระยะสแกน: " .. rangeSlider.Text .. " หน่วย"
+    rangeLabel.Text = "Scan Range: " .. rangeSlider.Text .. " units"
 end)
 
--- อัปเดตรายการอัตโนมัติทุกๆ 5 วินาที
+-- Auto update list every 5 seconds
 spawn(function()
     while screenGui.Parent do
         task.wait(5)
         if selectedPlayer and selectedPlayer.player.Parent then
-            -- อัปเดตการอ้างอิงตัวละคร
+            -- Update character references
             char = player.Character
             selectedPlayer.character = selectedPlayer.player.Character
             
-            -- ตรวจสอบว่าผู้เล่นยังอยู่ในระยะหรือไม่
+            -- Check if player is still in range
             if char and char:FindFirstChild("HumanoidRootPart") and 
                selectedPlayer.character and selectedPlayer.character:FindFirstChild("HumanoidRootPart") then
                 local distance = getDistance(char.HumanoidRootPart.Position, selectedPlayer.character.HumanoidRootPart.Position)
@@ -1340,18 +1034,18 @@ spawn(function()
                 if distance <= scanRange then
                     showPlayerItems(selectedPlayer)
                 else
-                    feedback.Text = selectedPlayer.player.Name .. " อยู่ไกลเกินไป"
+                    feedback.Text = selectedPlayer.player.Name .. " is too far away"
                 end
             end
         end
     end
 end)
 
-print("ตัวขโมยของสากลพร้อมใช้งาน!")
-print("คำเตือน: ใช้เฉพาะในเซิร์ฟเวอร์ทดสอบเท่านั้น")
-print("วิธีใช้:")
-print("- สแกนหาผู้เล่น -> เลือกผู้เล่น -> เลือกไอเทม -> ขโมย")
-print("- หรือ พิมพ์ชื่อไอเทมเพื่อค้นหา -> เลือกไอเทม -> ขโมย") 
-print("- หรือ เลือกผู้เล่น -> คลิก 'ขโมยทั้งหมดจากคนที่เลือก'")
-print("- หรือ คลิก 'ขโมยจากทุกคน' สำหรับการขโมยจำนวนมาก")
-print("- กดปุ่ม R เพื่อรีเฟรชตัวละครหากไอเทมไม่แสดงอย่างถูกต้อง")
+print("Universal Item Stealer ready!")
+print("Warning: Use only on test servers")
+print("How to use:")
+print("- Scan for players -> Select player -> Select item -> Steal")
+print("- OR type item name to search -> Select item -> Steal") 
+print("- OR select player -> click 'Steal All Items from Selected Player'")
+print("- OR click 'Steal All Items from Everyone' for mass theft")
+print("- Press R key to refresh character if items don't show properly")
